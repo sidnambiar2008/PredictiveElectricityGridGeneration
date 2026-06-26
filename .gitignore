@@ -3,3 +3,6 @@ data/
 saved_models/
 .idea/
 __pycache__/
+*.egg-info/
+.eggs/
+.DS_Store
