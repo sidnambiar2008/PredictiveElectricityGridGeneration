@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Predictive-Energy-Grid-Generation"
+version = "0.1.0"
+
+dependencies = [
+    "torch >=2.10.0, <2.13.0",
+    "pandas >=2.3.3, <3.0.0",
+    "numpy >=2.3.2, <2.5.0",
+    "requests >=2.33.0",
+    "scikit-learn >=1.8.0, <1.10.0",
+    "matplotlib >=3.9.0, <3.11.0",
+    "jupyterlab >=4.3.0"
+]
+requires-python = ">=3.11, <3.15"
+readme = "README.md"
+license = "MIT"
+
+authors = [
+    { name = "Sidharth Nambiar", email = "sidnambiar2008@gmail.com" }
+]
+maintainers = [
+    { name = "Sidharth Nambiar", email = "sidnambiar2008@gmail.com" }
+]
+description = "Predict the future state of the U.S. electricity grid: electricity and energy demand as well as generation"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = [
+    "time-series-forecasting", "pytorch", "lstm", "deep-learning", "electricity-grid",
+    "multivariate-forecasting", "energy-analytics", "eia-930"
+]
+
+[tool.setuptools]
+packages = ["src", "src.ingestion", "src.models", "src.training", "src.evaluation"]
+
