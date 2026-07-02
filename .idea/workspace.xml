@@ -5,18 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3f0a1d9-9fb8-4b41-926e-47a3b55b32ec" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/run_pipeline.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/evaluation/visualizer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ingestion/api_wrapper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/models/baseline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/PredictiveElectricityGridGeneration.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PredictiveElectricityGridGeneration.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/LSTM_Neural_Network.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictive_Energy_Grid_Generation.egg-info/PKG-INFO" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictive_Energy_Grid_Generation.egg-info/SOURCES.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictive_Energy_Grid_Generation.egg-info/dependency_links.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictive_Energy_Grid_Generation.egg-info/requires.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictive_Energy_Grid_Generation.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/evaluation/visualizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/evaluation/visualizer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,23 +27,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.00000220622662" />
-      <entry key="MS500" value="1.0852614585741707" />
-      <entry key="S2" value="2.0671610215742486" />
-      <entry key="S5" value="2.9597606854327165" />
-      <entry key="S10" value="3.4198928228045906" />
-      <entry key="S30" value="3.791411610991764" />
-      <entry key="S60" value="3.8937197274585036" />
-      <entry key="M2" value="3.961917099156647" />
-      <entry key="M5" value="5.115364115214821" />
-      <entry key="M10" value="12.752833207661434" />
-      <entry key="M15" value="27.178480322176167" />
-      <entry key="M30" value="81.40535938360298" />
-      <entry key="H1" value="158.06064733318885" />
-      <entry key="H2" value="226.8114208020077" />
-      <entry key="H4" value="289.9757591847741" />
-      <entry key="D1" value="515.2866269778589" />
-      <entry key="W1" value="632.596367756863" />
+      <entry key="MS100" value="1.1947969854811866" />
+      <entry key="MS500" value="1.9097738378435414" />
+      <entry key="S2" value="4.301967444589312" />
+      <entry key="S5" value="6.628370517219878" />
+      <entry key="S10" value="9.01588279580483" />
+      <entry key="S30" value="16.790586735831965" />
+      <entry key="S60" value="26.138519729109525" />
+      <entry key="M2" value="40.58343762347815" />
+      <entry key="M5" value="64.18166565316568" />
+      <entry key="M10" value="79.08921536740353" />
+      <entry key="M15" value="86.10076396764075" />
+      <entry key="M30" value="95.78613786137696" />
+      <entry key="H1" value="102.64521191258986" />
+      <entry key="H2" value="106.92812922409632" />
+      <entry key="H4" value="109.35253982126684" />
+      <entry key="D1" value="130.99598323182315" />
+      <entry key="W1" value="641.7185400458193" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -60,36 +52,36 @@
       <entry key="S5" value="0.0" />
       <entry key="S10" value="0.0" />
       <entry key="S30" value="0.0" />
-      <entry key="S60" value="4.95231718981513E-257" />
-      <entry key="M2" value="7.037452302644708E-129" />
-      <entry key="M5" value="5.562685328233738E-52" />
-      <entry key="M10" value="2.6450099147798845E-26" />
-      <entry key="M15" value="1.0622629694783101E-17" />
-      <entry key="M30" value="5.210100905034004E-9" />
-      <entry key="H1" value="1.3433190512105182E-4" />
-      <entry key="H2" value="0.022745009944338375" />
-      <entry key="H4" value="0.3002034275337598" />
-      <entry key="D1" value="2.596188806368317" />
-      <entry key="W1" value="3.76041209028685" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="2.7200934927855497E-203" />
+      <entry key="M15" value="9.96766129501585E-136" />
+      <entry key="M30" value="4.464343056681909E-68" />
+      <entry key="H1" value="3.4501882841761184E-34" />
+      <entry key="H2" value="3.170860282371708E-17" />
+      <entry key="H4" value="9.727912824199435E-9" />
+      <entry key="D1" value="0.16097312940475653" />
+      <entry key="W1" value="3.994545403450212" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="9.11314005303729E-6" />
-      <entry key="MS500" value="0.14761435423624714" />
-      <entry key="S2" value="1.4690023634909843" />
-      <entry key="S5" value="2.624774854243551" />
-      <entry key="S10" value="3.2286648459241096" />
-      <entry key="S30" value="3.721339962254076" />
-      <entry key="S60" value="3.857815600305847" />
-      <entry key="M2" value="3.9437406555021783" />
-      <entry key="M5" value="5.107832272568018" />
-      <entry key="M10" value="12.747177903930261" />
-      <entry key="M15" value="27.171943849039643" />
-      <entry key="M30" value="81.39732743810933" />
-      <entry key="H1" value="158.0537697964866" />
-      <entry key="H2" value="226.82938282529145" />
-      <entry key="H4" value="290.2728425573959" />
-      <entry key="D1" value="517.8817141889997" />
-      <entry key="W1" value="636.3565756191258" />
+      <entry key="MS100" value="1.1527981232093598" />
+      <entry key="MS500" value="1.895522705567616" />
+      <entry key="S2" value="4.294115544147782" />
+      <entry key="S5" value="6.62358673229132" />
+      <entry key="S10" value="9.012574260902833" />
+      <entry key="S30" value="16.78836427303464" />
+      <entry key="S60" value="26.136734224854568" />
+      <entry key="M2" value="40.58204252030048" />
+      <entry key="M5" value="64.18073900892348" />
+      <entry key="M10" value="79.08811992659996" />
+      <entry key="M15" value="86.09930846670257" />
+      <entry key="M30" value="95.78438794936534" />
+      <entry key="H1" value="102.64379387696623" />
+      <entry key="H2" value="106.92722018393758" />
+      <entry key="H4" value="109.3520244590898" />
+      <entry key="D1" value="131.1567964500418" />
+      <entry key="W1" value="645.712847895651" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -101,36 +93,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.api_wrapper.executor": "Run",
-    "Python.baseline.executor": "Run",
-    "Python.run_pipeline.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "BaselineImplementation",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/sidn/src/PredictiveElectricityGridGeneration",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pathVariables",
-    "to.speed.mode.migration.done": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.api_wrapper.executor&quot;: &quot;Run&quot;,
+    &quot;Python.baseline.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_pipeline.executor&quot;: &quot;Run&quot;,
+    &quot;Python.visualizer.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;BaselineImplementation&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/sidn/src/PredictiveElectricityGridGeneration&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pathVariables&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "TEXT"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;TEXT&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -143,6 +136,7 @@
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
         <env name="EIA_API_KEY" value="ikiWlfkBpTbc9FaYgAqKDRqfFVnHxHi4Qnp5uCUW" />
       </envs>
       <option name="SDK_HOME" value="" />
@@ -168,6 +162,7 @@
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
         <env name="EIA_API_KEY" value="ikiWlfkBpTbc9FaYgAqKDRqfFVnHxHi4Qnp5uCUW" />
       </envs>
       <option name="SDK_HOME" value="" />
@@ -186,13 +181,39 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="visualizer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="PredictiveElectricityGridGeneration" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/evaluation" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/evaluation/visualizer.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <list>
       <item itemvalue="Python.api_wrapper" />
+      <item itemvalue="Python.visualizer" />
       <item itemvalue="Python.run_pipeline" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.run_pipeline" />
+        <item itemvalue="Python.visualizer" />
       </list>
     </recent_temporary>
   </component>
