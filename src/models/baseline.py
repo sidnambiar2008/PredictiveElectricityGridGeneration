@@ -26,9 +26,15 @@ class DiurnalRollingMeanBaseline:
            Returns:
                dataframe:
         """
+        # 1. Forward-fill then backward-fill missing data to handle API gaps or network dropouts
         df_clean = historical_data.ffill().bfill()
+
+        # 2. Group the continuous time-series rows by the hour of the day (0 through 23)
         hourly_groups = df_clean.groupby(df_clean.index.hour)
-        rolling_averages = hourly_groups.rolling(window = self.window_days, min_periods = 1, closed = "left").mean()
+
+        # 3. For each isolated hour bucket, calculate a rolling mean across the lookback window.
+        # 'closed="left"' excludes the target hour itself, preventing target data leakage.
+        rolling_averages = hourly_groups.rolling(window=self.window_days, min_periods=1, closed="left").mean()
 
         # 4. Remove the temporary hour column (index level 0) from the table
         clean_forecasts = rolling_averages.reset_index(level=0, drop=True)
