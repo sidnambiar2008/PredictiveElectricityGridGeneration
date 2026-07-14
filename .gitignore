@@ -1,8 +1,42 @@
+# --- Environments & Dependencies ---
 .venv/
-data/
-saved_models/
-.idea/
-__pycache__/
+env/
+venv/
+ENV/
 *.egg-info/
 .eggs/
+htmlcov/
+.pytest_cache/
+
+# --- Data & Storage ---
+data/
+grid_data/
+*.csv
+*.parquet
+*.jsonl
+*.h5
+
+# --- Model Artifacts & Checkpoints ---
+saved_models/
+checkpoints/
+*.pt
+*.pkl
+*.pb
+*.onnx
+
+# --- IDEs & System Files ---
+.idea/
+.vscode/
 .DS_Store
+Thumbs.db
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Logs & Tracking ---
+*.log
+runs/
+wandb/
+.env

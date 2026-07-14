@@ -36,7 +36,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14):
         "data[0]": "value",
         "facets[respondent][]": region_id,
         "sort[0][column]": "period",
-        "sort[0][direction]": "desc",
+        "sort[0][direction]": "asc",
         "length": 5000
     }
 
