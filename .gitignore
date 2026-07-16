@@ -40,3 +40,6 @@ __pycache__/
 runs/
 wandb/
 .env
+
+# Ignore all automatically generated runtime visualization graphics
+visuals/*.png
