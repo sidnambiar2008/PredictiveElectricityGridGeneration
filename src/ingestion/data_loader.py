@@ -5,8 +5,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class GridDataLoader(Dataset):
-    def __init__(self, grid_history_csv, lookback_steps: int=168):
+    def __init__(self, grid_history_csv, lookback_steps: int=168, forecast_horizon: int = 24):
         self.lookback_steps = lookback_steps
+        self.forecast_horizon = forecast_horizon
         self.feature_cols = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
 
         # Make the data a pandas recognized datatype to allow for chronological sorting
@@ -20,8 +21,6 @@ class GridDataLoader(Dataset):
         # Resample to hourly intervals for time series forecasting.
         # Fill gaps with ffill (previous hour) and bfill (start of series).
         # Crucial to prevent PyTorch from crashing on NaN values during training.
-        df_continuous = df_unique.asfreq('h')
-        self.df = df_continuous.ffill().bfill()
         df_continuous = df_unique.asfreq('h')
         self.df = df_continuous.ffill().bfill()
 

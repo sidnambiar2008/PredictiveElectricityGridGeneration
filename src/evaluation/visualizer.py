@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 
-def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_df: pd.DataFrame, fuel_name: str = "Solar",):
+def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_df: pd.DataFrame, fuel_name: str = "Solar",region_id: str = "CISO"):
     """
         Plots a small slice of actual vs forecasted generation for simplicity.
         Automatically skips initial NaN values caused by the 7-day lookback window to ensure predictions
@@ -16,9 +16,9 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     if first_valid_date is None:
         raise ValueError(f"The forecast dataframe contains only NaN values for {fuel_name}.")
 
-
+    lookback_window = 168
     # Graphs just 3 days of data starting from the earliest data point for simplicity
-    actual_slice = actual_df.loc[first_valid_date:][fuel_name].iloc[-24:]
+    actual_slice = actual_df.iloc[-lookback_window:][fuel_name]
     target_timestamps = actual_slice.index
     lstm_slice = lstm_df.loc[target_timestamps][fuel_name]
     baseline_slice = baseline_df.loc[target_timestamps][fuel_name]
@@ -31,7 +31,7 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     plt.plot(lstm_slice.index, lstm_slice.values, label="LSTM Horizon Forecast", color="red", linestyle="solid", linewidth=2)
 
     # Customize the graph to make it more readable and fits all the data in the graph
-    plt.title(f"GridPulse Analysis: {fuel_name} Generation & Forecast (CISO)", fontsize=14, fontweight="bold")
+    plt.title(f"GridPulse Analysis: {region_id} {fuel_name} Generation & Forecast", fontsize=14, fontweight="bold")
     plt.xlabel("Date & Time (UTC)", fontsize=12)
     plt.ylabel("Generation Output (Megawatts)", fontsize=12)
 
@@ -42,5 +42,5 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     plt.tight_layout()
 
     os.makedirs("visuals", exist_ok=True)
-    plt.savefig(f"visuals/{fuel_name.lower()}_baseline_comparison.png", dpi=300)
+    plt.savefig(f"visuals/{fuel_name.lower()}_baseline_comparison_{lookback_window}.png", dpi=300)
     plt.show()

@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 import os
 
-from src.models.EnergyLSTM import GridPulseLSTM
+from src.models.GridPulseLSTM import GridPulseLSTM
 from src.ingestion.data_loader import GridDataLoader
 
 # Initialize hyperparameters related to training to simplify tuning
@@ -11,13 +11,13 @@ BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 EPOCHS = 15
 
-def train_model():
+def train_model(region):
     # Hardware Anchors
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"💻 Training hardware detected: {device.type.upper()}")
 
     # Pipeline Processing
-    dataset = GridDataLoader(grid_history_csv="grid_data/raw/grid_history.csv")
+    dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region.lower()}_v3.csv")
 
     # Ensures we have some data for training and validation
     train_size = int(len(dataset) * 0.85)
@@ -28,7 +28,7 @@ def train_model():
     val_subset = Subset(dataset, val_indices)
 
     train_loader = DataLoader(dataset = train_subset, batch_size = BATCH_SIZE, shuffle = False)
-    test_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
+    val_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
 
     # Model Instantiation
     model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
@@ -58,13 +58,32 @@ def train_model():
             running_loss += loss.item()
 
         epoch_loss = running_loss / len(train_loader)
-        print(f"   Epoch [{epoch:02d}/{EPOCHS:02d}] | Mean Training Loss: {epoch_loss:.6f}")
+        print(f"Epoch [{epoch:02d}/{EPOCHS:02d}] | Mean Training Loss: {epoch_loss:.6f}")
+
+        model.eval()
+        val_loss = 0.0
+
+        with torch.no_grad():
+            for x_batch, y_batch in val_loader:
+                x_batch = x_batch.to(device)
+                y_batch = y_batch.to(device)
+
+                predictions = model(x_batch)
+                loss = loss_fn(predictions, y_batch)
+                val_loss += loss.item()
+
+        val_loss /= len(val_loader)
+
+        print(f"| Validation Loss: {val_loss:.6f}")
 
     os.makedirs("saved_models", exist_ok=True)
-    save_path = os.path.join("saved_models", "lstm_grid_pulse.pt")
+    save_path = os.path.join("saved_models", f"lstm_grid_pulse_{region.lower()}_v2.pt")
     torch.save(model.state_dict(), save_path)
     print(f"\n Training complete! Model weights successfully stored at: {save_path}")
 
 
 if __name__ == "__main__":
-    train_model()
+    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
+    for region in regions:
+        print(f"\n========== TRAINING {region} ==========")
+        train_model(region)
