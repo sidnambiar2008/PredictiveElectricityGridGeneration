@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import time
 
-def fetch_latest_eia_data(region_id = "CISO", days_back = 14):
+def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp = None):
     """
        Fetches the latest data for each fuel in the electricity grid
        to ensure the model has 7 days of historical data and 7 days to evaluate
@@ -32,8 +32,12 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14):
     BASE_URL = "https://api.eia.gov"
     url = f"{BASE_URL}/v2/electricity/rto/fuel-type-data/data/"
 
-    # Calculate true rolling boundaries based on the current calendar day
-    end_date: pd.Timestamp = pd.Timestamp.now()
+    # Calculate true rolling boundaries based on any set calendar day
+    if custom_end_date is not None:
+        end_date = custom_end_date
+    else:
+        end_date= pd.Timestamp.now()
+
     start_date: pd.Timestamp = pd.Timestamp(end_date - pd.Timedelta(days=days_back))
 
     # Format the timestamps to match the EIA API expectations (YYYY-MM-DDTHH)
@@ -64,7 +68,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14):
             break
 
         elif attempt < max_retries - 1:
-            print(print(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})"))
+            print(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
         else:
             raise Exception(f"Failed to connect to EIA API after {max_retries} attempts. Last status code: {response.status_code}")
 

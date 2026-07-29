@@ -14,7 +14,7 @@ class DiurnalRollingMeanBaseline:
 
     def predict(self, historical_data: pd.DataFrame) -> pd.DataFrame:
         """
-            Calculates a 7-day rolling average for each hour of the day individually.
+            Calculates a 7-day rolling average for the next 24 hours
 
              This function takes historical_data dataframe to allow for fitting
              and predictions
@@ -29,17 +29,23 @@ class DiurnalRollingMeanBaseline:
         # 1. Forward-fill then backward-fill missing data to handle API gaps or network dropouts
         df_clean = historical_data.ffill().bfill()
 
-        # 2. Group the continuous time-series rows by the hour of the day (0 through 23)
-        hourly_groups = df_clean.groupby(df_clean.index.hour)
+        forecasts = []
 
-        # 3. For each isolated hour bucket, calculate a rolling mean across the lookback window.
-        # 'closed="left"' excludes the target hour itself, preventing target data leakage.
-        rolling_averages = hourly_groups.rolling(window=self.window_days, min_periods=1, closed="left").mean()
+        last_timestamp = df_clean.index[-1]
+        forecast_times = pd.date_range(
+            start=last_timestamp + pd.Timedelta(hours=1),
+            periods=24,
+            freq="h"
+        )
 
-        # 4. Remove the temporary hour column (index level 0) from the table
-        clean_forecasts = rolling_averages.reset_index(level=0, drop=True)
+        #
+        for timestamp in forecast_times:
+            hour = timestamp.hour
+            hour_values = df_clean[df_clean.index.hour == hour]
+            prediction = hour_values.tail(self.window_days).mean()
+            forecasts.append(prediction)
 
-        # 5. Sort all rows chronologically from the oldest hour to the newest hour
-        clean_forecasts = clean_forecasts.sort_index()
+        forecast_df = pd.DataFrame(forecasts, index=forecast_times, columns = df_clean.columns)
 
-        return clean_forecasts
+
+        return forecast_df

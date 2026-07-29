@@ -20,18 +20,15 @@ def evaluate_models():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     dataset = GridDataLoader("../../grid_data/raw/grid_history_pjm_v3.csv")
 
+    # Ensures the same breakdown of the dataset, now focusion on validation
     train_size = int(len(dataset) * 0.85)
-
     validation_indices = list(range(train_size, len(dataset)))
-
     validation_subset = Subset(dataset, validation_indices)
-
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
     model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
     model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_pjm_v2.pt",
                                      map_location = device))
-
     model.eval()
 
     predictions = []
@@ -54,6 +51,7 @@ def evaluate_models():
 
     baseline = DiurnalRollingMeanBaseline()
 
+    # Allows for assessment of the baseline vs the actual values
     baseline_predictions = baseline.predict(dataset.df)
     baseline_predictions = baseline_predictions.iloc[train_size+ dataset.lookback_steps:]
     baseline_predictions = baseline_predictions[dataset.feature_cols].values
@@ -71,6 +69,7 @@ def evaluate_models():
     lstm_rmses = []
     lstm_r2s = []
 
+    # Calculates various statistics
     for i, fuel in enumerate(dataset.feature_cols):
         lstm_mae = mean_absolute_error(
             targets[:, i],

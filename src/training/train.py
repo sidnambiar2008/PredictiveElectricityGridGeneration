@@ -31,7 +31,7 @@ def train_model(region):
     val_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
 
     # Model Instantiation
-    model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
+    model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -69,6 +69,12 @@ def train_model(region):
                 y_batch = y_batch.to(device)
 
                 predictions = model(x_batch)
+
+                if epoch == 1:
+                    print("Input:", x_batch.shape)
+                    print("Target:", y_batch.shape)
+                    print("Prediction:", predictions.shape)
+
                 loss = loss_fn(predictions, y_batch)
                 val_loss += loss.item()
 
@@ -77,13 +83,13 @@ def train_model(region):
         print(f"| Validation Loss: {val_loss:.6f}")
 
     os.makedirs("saved_models", exist_ok=True)
-    save_path = os.path.join("saved_models", f"lstm_grid_pulse_{region.lower()}_v2.pt")
+    save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region.lower()}_v1.pt")
     torch.save(model.state_dict(), save_path)
     print(f"\n Training complete! Model weights successfully stored at: {save_path}")
 
 
 if __name__ == "__main__":
-    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
+    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
     for region in regions:
         print(f"\n========== TRAINING {region} ==========")
         train_model(region)

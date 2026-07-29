@@ -35,12 +35,12 @@ class GridDataLoader(Dataset):
 
     def __len__(self):
         # Ensures that we do not look ahead past the most recent data
-        return len(self.scaled_data) - self.lookback_steps
+        return len(self.scaled_data) - self.lookback_steps - self.forecast_horizon
 
     def __getitem__(self, idx):
         # Ensures the window of the memory cell is 168 hours(7 days) for all
         x_sequence = self.scaled_data[idx : idx + self.lookback_steps]
-        y_target = self.scaled_data[idx + self.lookback_steps]
+        y_target = self.scaled_data[idx + self.lookback_steps: idx + self.lookback_steps + self.forecast_horizon]
 
         # Creates a torch readable dataset to train the network successfully
         return (torch.tensor(x_sequence, dtype=torch.float32),
