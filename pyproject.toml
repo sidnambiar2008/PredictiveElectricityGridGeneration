@@ -5,17 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Predictive-Energy-Grid-Generation"
 version = "0.1.0"
+requires-python = "~=3.11.0"
 
 dependencies = [
-    "torch >=2.10.0, <2.13.0",
-    "pandas >=2.3.3, <3.0.0",
-    "numpy >=2.3.2, <2.5.0",
-    "requests >=2.33.0",
-    "scikit-learn >=1.8.0, <1.10.0",
-    "matplotlib >=3.9.0, <3.11.0",
-    "jupyterlab >=4.3.0"
+    "torch == 2.12.1",
+    "pandas == 2.3.3",
+    "numpy == 2.4.6",
+    "requests == 2.34.2",
+    "scikit-learn == 1.9.0",
+    "matplotlib == 3.10.9",
+    "jupyterlab == 4.6.0"
 ]
-requires-python = ">=3.11, <3.15"
 readme = "README.md"
 license = "MIT"
 
