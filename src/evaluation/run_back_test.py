@@ -98,8 +98,9 @@ if __name__ == "__main__":
     summer_test_date = pd.Timestamp("2026-07-28")
     winter_test_date = pd.Timestamp("2026-01-15 14:00:00")
     spring_storm_date = pd.Timestamp("2026-04-15")
+    winter_test_date_two = pd.Timestamp("2022-12-22")
 
-    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Wind", days_back=15, custom_end_date=summer_test_date)
+    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Natural Gas", days_back=15, custom_end_date=winter_test_date_two)
 
     print("\n--- QUICK RESULTS SUMMARY ---")
     print(f"Target Fuel Source: {results['fuel_name']}")
