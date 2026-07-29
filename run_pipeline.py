@@ -14,12 +14,11 @@ if __name__ == "__main__":
 
     try:
         # Pull 14 days of dynamic fuel-mix data for the California grid
-        raw_grid_data = fetch_latest_eia_data(region_id="PJM", days_back=30)
+        raw_grid_data = fetch_latest_eia_data(region_id="PJM", days_back=11)
         baseline_model = DiurnalRollingMeanBaseline(window_days=7)
 
-        backtest_cutoff = raw_grid_data.index[-1] - pd.Timedelta(days=5)
+        backtest_cutoff = raw_grid_data.index[-1]
         historical_df = raw_grid_data.loc[:backtest_cutoff].iloc[-168:]
-        ground_truth_df = raw_grid_data.loc[backtest_cutoff:].iloc[1:25]
 
         forecast_matrix = baseline_model.predict(historical_df)
 
@@ -51,19 +50,12 @@ if __name__ == "__main__":
 
             lstm_unscaled_matrix = lstm_base_data.scaler.inverse_transform(lstm_scaled_matrix)
 
-           # Ensures that there is no prediction volatility when a feature input is 0
-            for idx, col in enumerate(feature_cols):
-                if live_raw_matrix[-lookback:, idx].max() == 0:
-                    lstm_unscaled_matrix[:, idx] = 0
-
-            forecast_index = ground_truth_df.index
-
-            #forecast_index = pd.date_range(start = raw_grid_data.index[-1] + pd.Timedelta(hours=1), periods = 24, freq = "h")
+            forecast_index = pd.date_range(start = raw_grid_data.index[-1] + pd.Timedelta(hours=1), periods = 24, freq = "h")
 
             lstm_df = pd.DataFrame(data = lstm_unscaled_matrix, columns = feature_cols, index=forecast_index)
 
         # Make the plot so models are comparable
-        plot_fuel_forecast(actual_df=historical_df, lstm_df= lstm_df, baseline_df=forecast_matrix,  ground_truth_df=ground_truth_df, fuel_name="Wind", region_id = "PJM")
+        plot_fuel_forecast(actual_df=historical_df, lstm_df= lstm_df, baseline_df=forecast_matrix, fuel_name="Wind", region_id = "PJM")
 
 
     except Exception as error:

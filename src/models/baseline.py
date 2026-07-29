@@ -16,8 +16,8 @@ class DiurnalRollingMeanBaseline:
         """
             Calculates a 7-day rolling average for the next 24 hours
 
-             This function takes historical_data dataframe to allow for fitting
-             and predictions
+            This function takes historical_data dataframe to allow for fitting
+            and predictions
 
            Args:
                region_id (string): The region code that is current being fetched

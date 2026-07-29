@@ -27,31 +27,34 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     model.eval()
 
     eval_hours = 168
-    baseline_preds = []
-    lstm_preds = []
+    forecast_hours = 24
 
-    for i in range(eval_hours):
-        lookback_df = raw_grid_data.iloc[i:i+168]
-        baseline_forecast = baseline_model.predict(lookback_df)
-        baseline_preds.append(baseline_forecast[fuel_name].iloc[0])
+    baseline_predictions = []
+    lstm_predictions = []
 
-        live_raw_matrix = lookback_df.reindex(columns=feature_cols, fill_value=0).bfill().ffill().values
-        live_scaled_matrix = lstm_base_data.scaler.transform(live_raw_matrix)
+    historical_df = raw_grid_data.iloc[-(eval_hours+forecast_hours):-forecast_hours]
+    ground_truth_df = raw_grid_data.iloc[-forecast_hours:]
 
-        torch_input = torch.tensor(live_scaled_matrix, dtype=torch.float32).unsqueeze(0).to(device)
+    baseline_forecast = baseline_model.predict(historical_df)
+    baseline_predictions = baseline_forecast[fuel_name].iloc[0:24].values
 
-        with torch.no_grad():
-            prediction = model(torch_input).squeeze(0).cpu().numpy()
-            unscaled_pred = lstm_base_data.scaler.inverse_transform(prediction)
+    live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).bfill().ffill().values
+    live_scaled_matrix = lstm_base_data.scaler.transform(live_raw_matrix)
 
-            lstm_preds.append(unscaled_pred[0, fuel_idx])
+    torch_input = torch.tensor(live_scaled_matrix, dtype=torch.float32).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        prediction = model(torch_input).squeeze(0).cpu().numpy()
+        unscaled_pred = lstm_base_data.scaler.inverse_transform(prediction)
+
+        lstm_predictions = unscaled_pred[0:24, fuel_idx]
 
 
-    eval_index = raw_grid_data.index[-eval_hours:]
-    actuals = raw_grid_data[fuel_name].iloc[-eval_hours:]
+    eval_index = raw_grid_data.index[-forecast_hours:]
+    actuals = raw_grid_data[fuel_name].iloc[-forecast_hours:]
 
-    plot_lstm = pd.Series(lstm_preds, index=eval_index)
-    plot_base = pd.Series(baseline_preds, index=eval_index)
+    plot_lstm = pd.Series(lstm_predictions, index=eval_index)
+    plot_base = pd.Series(baseline_predictions, index=eval_index)
 
     # 4. Generate the full-length multi-line chart
     plt.figure(figsize=[14, 6])
@@ -92,7 +95,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
 if __name__ == "__main__":
     print("Testing model on historical data!!!")
 
-    summer_test_date = pd.Timestamp("2026-07-27")
+    summer_test_date = pd.Timestamp("2026-07-28")
     winter_test_date = pd.Timestamp("2026-01-15 14:00:00")
     spring_storm_date = pd.Timestamp("2026-04-15")
 
