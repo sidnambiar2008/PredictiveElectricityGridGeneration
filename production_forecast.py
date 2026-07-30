@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import joblib
 
 from src.ingestion.data_loader import GridDataLoader
 from src.ingestion.api_wrapper import fetch_latest_eia_data
@@ -26,11 +27,17 @@ if __name__ == "__main__":
 
         feature_cols = lstm_base_data.feature_cols
 
+        # Loads the scaler this model was trained against, rather than trusting
+        # lstm_base_data.scaler (which would silently recompute from whatever
+        # grid_history_pjm_v3.csv contains today, and drift out of sync with the
+        # model if that file is ever regenerated)
+        scaler = joblib.load("saved_models/scaler_pjm_v1.pkl")
+
         # Reindex based on the same feature to ensure consistency among the models dataset
         live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).ffill().bfill().values
 
         # Ensures the data is looked through the same range, (-1,1), as in training
-        live_scaled_matrix = lstm_base_data.scaler.transform(live_raw_matrix)
+        live_scaled_matrix = scaler.transform(live_raw_matrix)
 
         device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
@@ -48,7 +55,7 @@ if __name__ == "__main__":
 
             lstm_scaled_matrix = prediction.squeeze(0).cpu().numpy()
 
-            lstm_unscaled_matrix = lstm_base_data.scaler.inverse_transform(lstm_scaled_matrix)
+            lstm_unscaled_matrix = scaler.inverse_transform(lstm_scaled_matrix)
 
             forecast_index = pd.date_range(start = raw_grid_data.index[-1] + pd.Timedelta(hours=1), periods = 24, freq = "h")
 
