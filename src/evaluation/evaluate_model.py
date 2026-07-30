@@ -28,7 +28,7 @@ def evaluate_models():
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
     model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
-    model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_24h_pjm_v1.pt",
+    model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_24h_pjm_v2.pt",
                                      map_location = device))
     model.eval()
 

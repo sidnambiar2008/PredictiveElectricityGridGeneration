@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
-        model.load_state_dict(torch.load("saved_models/lstm_grid_pulse_24h_pjm_v1.pt", map_location=device))
+        model.load_state_dict(torch.load("saved_models/lstm_grid_pulse_24h_pjm_v2.pt", map_location=device))
 
         model.eval()
 

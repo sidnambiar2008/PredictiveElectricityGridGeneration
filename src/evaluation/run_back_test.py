@@ -23,7 +23,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     model = GridPulseLSTM(input_size=9, hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
-    model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_24h_pjm_v1.pt", map_location=device))
+    model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_24h_pjm_v2.pt", map_location=device))
 
     model.eval()
 
