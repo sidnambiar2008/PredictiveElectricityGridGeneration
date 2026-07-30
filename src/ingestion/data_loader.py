@@ -30,7 +30,6 @@ class GridDataLoader(Dataset):
         train_size = int(len(raw_matrix) * 0.85)
 
         train_slice = raw_matrix[:train_size]
-        validation_slice = raw_matrix[train_size:]
 
         # Scales the data to prevent large numbers from returning flat output values
         # For example, 58 MWh and 720 MWh return 1 due to the tanh activation, causing overfitting
