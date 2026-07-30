@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Subset
 import os
+import joblib
 
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.ingestion.data_loader import GridDataLoader
@@ -86,6 +87,13 @@ def train_model(region):
     save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region.lower()}_v1.pt")
     torch.save(model.state_dict(), save_path)
     print(f"\n Training complete! Model weights successfully stored at: {save_path}")
+
+    # Persists the exact scaler this model was trained against, so later scripts
+    # transform live/validation data the same way regardless of what the CSV
+    # on disk looks like by the time they run
+    scaler_path = os.path.join("saved_models", f"scaler_{region.lower()}_v1.pkl")
+    joblib.dump(dataset.scaler, scaler_path)
+    print(f" Scaler saved alongside model at: {scaler_path}")
 
 
 if __name__ == "__main__":

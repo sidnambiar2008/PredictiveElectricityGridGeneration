@@ -2,6 +2,7 @@ import os
 import torch
 import numpy as np
 import pandas as pd
+import joblib
 import matplotlib.pyplot as plt
 from src.ingestion.data_loader import GridDataLoader
 from src.ingestion.api_wrapper import fetch_latest_eia_data
@@ -26,6 +27,12 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
 
     model.eval()
 
+    # Loads the scaler this model was trained against, rather than trusting
+    # lstm_base_data.scaler (which would silently recompute from whatever
+    # grid_history_pjm_v3.csv contains today, and drift out of sync with the
+    # model if that file is ever regenerated)
+    scaler = joblib.load("../../saved_models/scaler_pjm_v1.pkl")
+
     eval_hours = 168
     forecast_hours = 24
 
@@ -39,13 +46,13 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     baseline_predictions = baseline_forecast[fuel_name].iloc[0:24].values
 
     live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).bfill().ffill().values
-    live_scaled_matrix = lstm_base_data.scaler.transform(live_raw_matrix)
+    live_scaled_matrix = scaler.transform(live_raw_matrix)
 
     torch_input = torch.tensor(live_scaled_matrix, dtype=torch.float32).unsqueeze(0).to(device)
 
     with torch.no_grad():
         prediction = model(torch_input).squeeze(0).cpu().numpy()
-        unscaled_pred = lstm_base_data.scaler.inverse_transform(prediction)
+        unscaled_pred = scaler.inverse_transform(prediction)
 
         lstm_predictions = unscaled_pred[0:24, fuel_idx]
 

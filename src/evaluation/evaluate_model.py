@@ -1,6 +1,7 @@
 import torch
 import pandas as pd
 import numpy as np
+import joblib
 
 from sklearn.metrics import (
     mean_absolute_error,
@@ -31,6 +32,11 @@ def evaluate_models():
                                      map_location = device))
     model.eval()
 
+    # Loads the scaler this specific model was trained against, instead of trusting
+    # dataset.scaler (which would silently recompute from whatever grid_history_pjm_v3.csv
+    # contains today, and drift out of sync with the model if that file ever changes)
+    scaler = joblib.load("../../saved_models/scaler_pjm_v1.pkl")
+
     predictions = []
     targets = []
 
@@ -46,8 +52,8 @@ def evaluate_models():
         predictions = np.vstack(predictions)
         targets = np.vstack(targets)
 
-        predictions = dataset.scaler.inverse_transform(predictions)
-        targets = dataset.scaler.inverse_transform(targets)
+        predictions = scaler.inverse_transform(predictions)
+        targets = scaler.inverse_transform(targets)
 
     baseline = DiurnalRollingMeanBaseline()
 
