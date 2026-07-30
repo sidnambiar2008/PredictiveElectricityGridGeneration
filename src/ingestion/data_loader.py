@@ -27,10 +27,19 @@ class GridDataLoader(Dataset):
         # Make the data in each energy type a numpy array to scale the data
         raw_matrix = self.df[self.feature_cols].values
 
+        train_size = int(len(raw_matrix) * 0.85)
+
+        train_slice = raw_matrix[:train_size]
+        validation_slice = raw_matrix[train_size:]
+
         # Scales the data to prevent large numbers from returning flat output values
         # For example, 58 MWh and 720 MWh return 1 due to the tanh activation, causing overfitting
         self.scaler = MinMaxScaler(feature_range = (0, 1))
-        self.scaled_data = self.scaler.fit_transform(raw_matrix)
+
+        # Ensures the training set is learned but validation is not
+        self.scaler.fit(train_slice)
+
+        self.scaled_data = self.scaler.transform(raw_matrix)
 
 
     def __len__(self):
