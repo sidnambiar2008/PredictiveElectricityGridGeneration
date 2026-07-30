@@ -33,7 +33,10 @@ class GridDataLoader(Dataset):
 
         # Scales the data to prevent large numbers from returning flat output values
         # For example, 58 MWh and 720 MWh return 1 due to the tanh activation, causing overfitting
-        self.scaler = MinMaxScaler(feature_range = (0, 1))
+        # clip=True bounds any value outside the training-fit range (e.g. validation
+        # or live data containing something more extreme than training ever saw)
+        # to [0, 1] instead of letting it blow up loss/predictions unbounded
+        self.scaler = MinMaxScaler(feature_range = (0, 1), clip=True)
 
         # Ensures the training set is learned but validation is not
         self.scaler.fit(train_slice)

@@ -69,7 +69,13 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
             if col not in df.columns:
                 df[col] = 0
 
-
+        # EIA started reporting this region's geothermal generation as its own
+        # category partway through the collection window (it was previously
+        # folded into "Other"). Fold it back in so the feature is consistent
+        # across the whole history instead of jumping from a constant zero to
+        # a real value partway through.
+        df["Other"] = df["Other"] + df["Geothermal"]
+        df["Geothermal"] = 0.0
 
         df = df[EXPECTED_COLS]
         df = df.fillna(0)

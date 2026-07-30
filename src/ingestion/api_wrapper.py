@@ -95,4 +95,14 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
 
     clean_matrix = clean_matrix.sort_index().astype(float)
 
+    # Fold Geothermal into Other, matching the historical CSVs (see
+    # collect_history.py) where this generation is treated as part of "Other"
+    # rather than its own category
+    if "Geothermal" in clean_matrix.columns:
+        if "Other" in clean_matrix.columns:
+            clean_matrix["Other"] = clean_matrix["Other"] + clean_matrix["Geothermal"]
+        else:
+            clean_matrix["Other"] = clean_matrix["Geothermal"]
+        clean_matrix["Geothermal"] = 0.0
+
     return clean_matrix
