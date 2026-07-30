@@ -35,7 +35,7 @@ def evaluate_models():
     # Loads the scaler this specific model was trained against, instead of trusting
     # dataset.scaler (which would silently recompute from whatever grid_history_pjm_v3.csv
     # contains today, and drift out of sync with the model if that file ever changes)
-    scaler = joblib.load("../../saved_models/scaler_pjm_v1.pkl")
+    scaler = joblib.load("../../saved_models/scaler_pjm_v2.pkl")
 
     predictions = []
     targets = []

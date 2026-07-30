@@ -31,7 +31,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # lstm_base_data.scaler (which would silently recompute from whatever
     # grid_history_pjm_v3.csv contains today, and drift out of sync with the
     # model if that file is ever regenerated)
-    scaler = joblib.load("../../saved_models/scaler_pjm_v1.pkl")
+    scaler = joblib.load("../../saved_models/scaler_pjm_v2.pkl")
 
     eval_hours = 168
     forecast_hours = 24

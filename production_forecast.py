@@ -31,7 +31,7 @@ if __name__ == "__main__":
         # lstm_base_data.scaler (which would silently recompute from whatever
         # grid_history_pjm_v3.csv contains today, and drift out of sync with the
         # model if that file is ever regenerated)
-        scaler = joblib.load("saved_models/scaler_pjm_v1.pkl")
+        scaler = joblib.load("saved_models/scaler_pjm_v2.pkl")
 
         # Reindex based on the same feature to ensure consistency among the models dataset
         live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).ffill().bfill().values
