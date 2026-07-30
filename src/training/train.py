@@ -84,14 +84,14 @@ def train_model(region):
         print(f"| Validation Loss: {val_loss:.6f}")
 
     os.makedirs("saved_models", exist_ok=True)
-    save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region.lower()}_v1.pt")
+    save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region.lower()}_v2.pt")
     torch.save(model.state_dict(), save_path)
     print(f"\n Training complete! Model weights successfully stored at: {save_path}")
 
     # Persists the exact scaler this model was trained against, so later scripts
     # transform live/validation data the same way regardless of what the CSV
     # on disk looks like by the time they run
-    scaler_path = os.path.join("saved_models", f"scaler_{region.lower()}_v1.pkl")
+    scaler_path = os.path.join("saved_models", f"scaler_{region.lower()}_v2.pkl")
     joblib.dump(dataset.scaler, scaler_path)
     print(f" Scaler saved alongside model at: {scaler_path}")
 
