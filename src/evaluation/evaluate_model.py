@@ -19,7 +19,7 @@ BATCH_SIZE = 32
 
 def evaluate_models():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    dataset = GridDataLoader("../../grid_data/raw/grid_history_pjm_v3.csv")
+    dataset = GridDataLoader("../../grid_data/raw/grid_history_pjm_v4.csv")
 
     # Ensures the same breakdown of the dataset, now focusion on validation
     train_size = int(len(dataset) * 0.85)

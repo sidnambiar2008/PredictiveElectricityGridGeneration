@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
         forecast_matrix = baseline_model.predict(historical_df)
 
-        lstm_base_data = GridDataLoader("grid_data/raw/grid_history_pjm_v3.csv")
+        lstm_base_data = GridDataLoader("grid_data/raw/grid_history_pjm_v4.csv")
 
         feature_cols = lstm_base_data.feature_cols
 

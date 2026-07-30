@@ -18,7 +18,7 @@ def train_model(region):
     print(f"💻 Training hardware detected: {device.type.upper()}")
 
     # Pipeline Processing
-    dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region.lower()}_v3.csv")
+    dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region.lower()}_v4.csv")
 
     # Ensures we have some data for training and validation
     train_size = int(len(dataset) * 0.85)

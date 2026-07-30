@@ -15,7 +15,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # Ensures the models are all initialized
     raw_grid_data = fetch_latest_eia_data(region_id = "PJM", days_back = days_back, custom_end_date = custom_end_date)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
-    lstm_base_data = GridDataLoader("../../grid_data/raw/grid_history_pjm_v3.csv")
+    lstm_base_data = GridDataLoader("../../grid_data/raw/grid_history_pjm_v4.csv")
 
     # Ensure that the columns indexes are consistently ordered and defined
     feature_cols = lstm_base_data.feature_cols
