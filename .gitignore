@@ -25,6 +25,7 @@ checkpoints/
 *.pkl
 *.pb
 *.onnx
+notebooks/
 
 # --- IDEs & System Files ---
 .idea/
