@@ -37,5 +37,5 @@ keywords = [
 ]
 
 [tool.setuptools]
-packages = ["src", "src.ingestion", "src.models", "src.training", "src.evaluation"]
+packages = ["src", "src.ingestion", "src.models", "src.training", "src.evaluation", "src.preprocessing", "src.inference"]
 

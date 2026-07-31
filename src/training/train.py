@@ -5,7 +5,7 @@ import os
 import joblib
 
 from src.models.GridPulseLSTM import GridPulseLSTM
-from src.ingestion.data_loader import GridDataLoader
+from preprocessing.data_loader import GridDataLoader
 
 # Initialize hyperparameters related to training to simplify tuning
 BATCH_SIZE = 32

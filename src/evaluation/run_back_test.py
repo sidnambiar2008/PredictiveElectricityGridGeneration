@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
-from src.ingestion.data_loader import GridDataLoader
+from preprocessing.data_loader import GridDataLoader
 from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
 from src.models.GridPulseLSTM import GridPulseLSTM

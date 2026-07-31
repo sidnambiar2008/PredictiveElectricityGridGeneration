@@ -2,10 +2,10 @@ import pandas as pd
 import torch
 import joblib
 
-from src.ingestion.data_loader import GridDataLoader
+from preprocessing.data_loader import GridDataLoader
 from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
-from src.evaluation.future_visualizer import plot_fuel_forecast
+from visualization.future_visualizer import plot_fuel_forecast
 from src.models.GridPulseLSTM import GridPulseLSTM
 
 def predict_24_hours_hours_ahead(region_id = "PJM"):

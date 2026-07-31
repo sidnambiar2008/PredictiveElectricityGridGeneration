@@ -9,7 +9,7 @@ from sklearn.metrics import (
     r2_score,
 )
 
-from src.ingestion.data_loader import GridDataLoader
+from preprocessing.data_loader import GridDataLoader
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.models.baseline import DiurnalRollingMeanBaseline
 from torch.utils.data import DataLoader, Subset
