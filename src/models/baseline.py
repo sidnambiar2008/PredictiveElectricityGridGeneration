@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 class DiurnalRollingMeanBaseline:
     def __init__(self, window_days: int = 7):
@@ -16,15 +15,11 @@ class DiurnalRollingMeanBaseline:
         """
             Calculates a 7-day rolling average for the next 24 hours
 
-            This function takes historical_data dataframe to allow for fitting
-            and predictions
-
            Args:
-               region_id (string): The region code that is current being fetched
-               days_back (int): The number of days back to allow
+               historical_data (DataFrame): Hourly generation history, one column per fuel type
 
            Returns:
-               dataframe:
+               DataFrame: 24-hour forecast, same columns as historical_data
         """
         # 1. Forward-fill then backward-fill missing data to handle API gaps or network dropouts
         df_clean = historical_data.ffill().bfill()
@@ -38,7 +33,6 @@ class DiurnalRollingMeanBaseline:
             freq="h"
         )
 
-        #
         for timestamp in forecast_times:
             hour = timestamp.hour
             hour_values = df_clean[df_clean.index.hour == hour]

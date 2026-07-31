@@ -1,6 +1,5 @@
 import os
 import torch
-import numpy as np
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
@@ -8,7 +7,7 @@ from src.ingestion.data_loader import GridDataLoader
 from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
 from src.models.GridPulseLSTM import GridPulseLSTM
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
 
@@ -29,7 +28,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
 
     # Loads the scaler this model was trained against, rather than trusting
     # lstm_base_data.scaler (which would silently recompute from whatever
-    # grid_history_pjm_v3.csv contains today, and drift out of sync with the
+    # grid_history_{region}_v4.csv contains today, and drift out of sync with the
     # model if that file is ever regenerated)
     scaler = joblib.load(f"../../saved_models/scaler_{region_id.lower()}_v2.pkl")
 

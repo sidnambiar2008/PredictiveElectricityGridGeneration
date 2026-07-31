@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import os
 
@@ -21,9 +20,6 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
 
     # Graphs 7 days of data starting from the earliest data point for simplicity
     actual_slice = actual_df.iloc[-lookback_window:][fuel_name]
-    #forecast_index = lstm_df.index
-
-    #actual_future = actual_df.loc[actual_df.index.intersection(forecast_index)]
     baseline_forecast = baseline_df[fuel_name]
     lstm_forecast = lstm_df[fuel_name]
 
@@ -44,7 +40,6 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     plt.plot(actual_slice.index, actual_slice.values, label=f"Actual {fuel_name} Generation", color="black", linewidth=2)
     plt.plot(extended_baseline.index, extended_baseline.values, label = "Diurnal Mean Prediction", color="orange", linestyle="--", linewidth=2)
     plt.plot(extended_lstm.index, extended_lstm.values, label="LSTM Horizon Forecast", color="red", linestyle="solid", linewidth=2)
-    #plt.plot(ground_truth_df.index, ground_truth_df[fuel_name].values, label="Ground Truth", color="green", linestyle="-", linewidth=2)
 
     # Customize the graph to make it more readable and fits all the data in the graph
     plt.title(f"GridPulse Analysis: {region_id} {fuel_name} Generation & Forecast", fontsize=14, fontweight="bold")

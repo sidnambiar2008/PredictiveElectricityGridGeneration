@@ -33,7 +33,7 @@ def evaluate_models(region_id = "PJM"):
     model.eval()
 
     # Loads the scaler this specific model was trained against, instead of trusting
-    # dataset.scaler (which would silently recompute from whatever grid_history_pjm_v4.csv
+    # dataset.scaler (which would silently recompute from whatever grid_history_{region}_v4.csv
     # contains today, and drift out of sync with the model if that file ever changes)
     scaler = joblib.load(f"../../saved_models/scaler_{region_id.lower()}_v2.pkl")
 

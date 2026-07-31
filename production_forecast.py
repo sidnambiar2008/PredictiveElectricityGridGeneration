@@ -23,7 +23,7 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
 
     # Loads the scaler this model was trained against, rather than trusting
     # lstm_base_data.scaler (which would silently recompute from whatever
-    # grid_history_pjm_v3.csv contains today, and drift out of sync with the
+    # grid_history_{region}_v4.csv contains today, and drift out of sync with the
     # model if that file is ever regenerated)
     scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
