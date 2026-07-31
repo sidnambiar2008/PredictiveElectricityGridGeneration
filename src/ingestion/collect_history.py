@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import requests
+from datetime import datetime, timedelta
+
 
 EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
 
@@ -99,20 +101,24 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
 
 
 def main():
+    end_date_dt = datetime.utcnow()
+    start_date_dt = end_date_dt - timedelta(days=7)
+
     os.makedirs("grid_data/raw", exist_ok=True)
     regions = ["CISO", "PJM", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
+
     for region in regions:
         save_path = f"grid_data/raw/grid_history_{region.lower()}_v4.csv"
 
         clean_history_df = fetch_historical_slice(
-            start_date="2023-01-01",
-            end_date="2026-01-01",
+            start_date=start_date_dt.strftime("%Y-%m-%dT%H"),
+            end_date=end_date_dt.strftime("%Y-%m-%dT%H"),
             region_id=region
         )
 
         # Diagnostic Telemetry Checkpoints:
         print("\n Checking dataframe dimensions before saving:")
-        print("Expected hourly rows:", 3 * 365 * 24)
+        print("Expected hourly rows:", 7 * 24)
         print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
         print(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
 
