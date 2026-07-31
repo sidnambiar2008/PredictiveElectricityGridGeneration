@@ -102,7 +102,7 @@ def main():
     os.makedirs("grid_data/raw", exist_ok=True)
     regions = ["CISO", "PJM", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
     for region in regions:
-        save_path = f"grid_data/raw/grid_history_{region.lower()}_v5.csv"
+        save_path = f"grid_data/raw/grid_history_{region.lower()}_v4.csv"
 
         clean_history_df = fetch_historical_slice(
             start_date="2023-01-01",
