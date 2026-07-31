@@ -69,6 +69,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
 
         elif attempt < max_retries - 1:
             print(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+            time.sleep(retry_delay)
         else:
             raise Exception(f"Failed to connect to EIA API after {max_retries} attempts. Last status code: {response.status_code}")
 
