@@ -65,10 +65,17 @@ def evaluate_models():
 
     baseline = DiurnalRollingMeanBaseline()
 
-    # Allows for assessment of the baseline vs the actual values
-    baseline_predictions = baseline.predict(dataset.df)
-    baseline_predictions = baseline_predictions.iloc[train_size+ dataset.lookback_steps:]
-    baseline_predictions = baseline_predictions[dataset.feature_cols].values
+    # Generate one 24-hour baseline forecast per validation window, using the
+    # exact same 168-hour lookback the LSTM used for that sample — so the
+    # baseline is judged on the identical held-out hours as the LSTM, instead
+    # of a single forecast made once at the very end of history
+    baseline_forecasts = []
+    for idx in validation_indices:
+        historical_slice = dataset.df.iloc[idx: idx + dataset.lookback_steps]
+        forecast = baseline.predict(historical_slice)
+        baseline_forecasts.append(forecast[dataset.feature_cols].values)
+
+    baseline_predictions = np.vstack(baseline_forecasts)
 
     print("LSTM predictions:", predictions.shape)
     print("Baseline predictions:", baseline_predictions.shape)
