@@ -49,8 +49,16 @@ def evaluate_models():
             predictions.append(preds.cpu().numpy())
             targets.append(y_batch.cpu().numpy())
 
-        predictions = np.vstack(predictions)
-        targets = np.vstack(targets)
+        predictions = np.vstack(predictions)  # (n_samples, 24, 9)
+        targets = np.vstack(targets)          # (n_samples, 24, 9)
+
+        # scaler was fit on individual hourly rows (n_rows, 9) and only accepts
+        # up to 2D input. Flatten the 24-hour forecast windows into individual
+        # hourly rows before inverse-transforming — this doesn't reorder or
+        # lose anything, since the scaler applies the same per-column math to
+        # every row regardless of which forecast window it came from.
+        predictions = predictions.reshape(-1, predictions.shape[-1])
+        targets = targets.reshape(-1, targets.shape[-1])
 
         predictions = scaler.inverse_transform(predictions)
         targets = scaler.inverse_transform(targets)
