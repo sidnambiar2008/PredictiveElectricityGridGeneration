@@ -17,9 +17,9 @@ from torch.utils.data import DataLoader, Subset
 
 BATCH_SIZE = 32
 
-def evaluate_models():
+def evaluate_models(region_id = "PJM"):
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    dataset = GridDataLoader("../../grid_data/raw/grid_history_pjm_v4.csv")
+    dataset = GridDataLoader(f"../../grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
     # Ensures the same breakdown of the dataset, now focusion on validation
     train_size = int(len(dataset) * 0.85)
@@ -28,14 +28,14 @@ def evaluate_models():
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
     model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
-    model.load_state_dict(torch.load("../../saved_models/lstm_grid_pulse_24h_pjm_v2.pt",
+    model.load_state_dict(torch.load(f"../../saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
                                      map_location = device))
     model.eval()
 
     # Loads the scaler this specific model was trained against, instead of trusting
-    # dataset.scaler (which would silently recompute from whatever grid_history_pjm_v3.csv
+    # dataset.scaler (which would silently recompute from whatever grid_history_pjm_v4.csv
     # contains today, and drift out of sync with the model if that file ever changes)
-    scaler = joblib.load("../../saved_models/scaler_pjm_v2.pkl")
+    scaler = joblib.load(f"../../saved_models/scaler_{region_id.lower()}_v2.pkl")
 
     predictions = []
     targets = []
@@ -164,10 +164,15 @@ def evaluate_models():
     )
 
     results.to_csv(
-        "evaluation_metrics_pjm.csv",
+        f"evaluation_metrics_{region_id.lower()}.csv",
         index=False
     )
 
 if __name__ == "__main__":
-    evaluate_models()
+    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
+    for region in regions:
+        try:
+            evaluate_models(region)
+        except Exception as error:
+            print(f"Evaluation failed for {region}: {error}")
 
