@@ -71,7 +71,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     plt.plot(eval_index, plot_lstm.values, label="LSTM Rolling Forecast", color="red", linestyle="solid",
              linewidth=1.5)
 
-    plt.title(f"Continuous Backtest Performance Analysis ({fuel_name})", fontsize=14, fontweight="bold")
+    plt.title(f"{region_id} Continuous Backtest Performance Analysis ({fuel_name})", fontsize=14, fontweight="bold")
     plt.xlabel("Timeline Date & Time (UTC)", fontsize=12)
     plt.ylabel("Generation Output (Megawatts)", fontsize=12)
     plt.grid(True, linestyle=":", alpha=0.6)
@@ -105,9 +105,9 @@ if __name__ == "__main__":
     summer_test_date = pd.Timestamp("2026-07-28")
     winter_test_date = pd.Timestamp("2026-01-15 14:00:00")
     spring_storm_date = pd.Timestamp("2026-04-15")
-    winter_test_date_two = pd.Timestamp("2022-12-22")
+    winter_test_date_two = pd.Timestamp("2025-12-22")
 
-    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back=15, custom_end_date=winter_test_date_two)
+    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Natural Gas", days_back=15, custom_end_date=winter_test_date_two)
 
     print("\n--- QUICK RESULTS SUMMARY ---")
     print(f"Target Fuel Source: {results['fuel_name']}")

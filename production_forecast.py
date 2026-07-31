@@ -1,6 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import joblib
 
@@ -15,8 +13,7 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
     raw_grid_data = fetch_latest_eia_data(region_id, days_back=11)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
 
-    backtest_cutoff = raw_grid_data.index[-1]
-    historical_df = raw_grid_data.loc[:backtest_cutoff].iloc[-168:]
+    historical_df = raw_grid_data.iloc[-168:]
 
     forecast_matrix = baseline_model.predict(historical_df)
 
@@ -59,7 +56,6 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
         lstm_df = pd.DataFrame(data=lstm_unscaled_matrix, columns=feature_cols, index=forecast_index)
 
     clean_assets = ["Solar", "Wind", "Hydro", "Nuclear"]
-    fossil_assets = ["Coal", "Natural Gas", "Petroleum", "Other"]
 
     # Answers how clean the energy grid is now
     clean_now = lstm_df[clean_assets].iloc[0].sum()
@@ -71,11 +67,6 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
     total_hourly = lstm_df.sum(axis=1)
     clean_grid_percentage = (clean_hourly / total_hourly * 100).fillna(0)
 
-    #  Calculate the TRUE CUMULATIVE 24-HOUR total for the aggregate day-ahead baseline
-    total_clean_megawatts_tomorrow = lstm_df[clean_assets].values.sum()
-    total_megawatts_tomorrow = lstm_df.values.sum()
-    true_cumulative_baseline = (
-            total_clean_megawatts_tomorrow / total_megawatts_tomorrow * 100) if total_megawatts_tomorrow > 0 else 0
 
     # EIA Standard Emissions Coefficients (Pounds of CO2 emitted per MWh)
     co2_factors = {
