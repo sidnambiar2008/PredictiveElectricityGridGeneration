@@ -165,7 +165,7 @@ def evaluate_models(region_id = "PJM"):
     )
 
     os.makedirs("evaluation_metrics", exist_ok=True)
-    save_path = f"evaluation_metrics/evaluation_metrics_{region_id.lower()}_v2.csv"
+    save_path = f"evaluation_metrics/evaluation_metrics_{region_id.lower()}_v3.csv"
 
     results.to_csv(
         save_path,
