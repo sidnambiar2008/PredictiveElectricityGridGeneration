@@ -1,3 +1,4 @@
+import os
 import torch
 import pandas as pd
 import numpy as np
@@ -9,7 +10,7 @@ from sklearn.metrics import (
     r2_score,
 )
 
-from preprocessing.data_loader import GridDataLoader
+from src.preprocessing.data_loader import GridDataLoader
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.models.baseline import DiurnalRollingMeanBaseline
 from torch.utils.data import DataLoader, Subset
@@ -163,8 +164,11 @@ def evaluate_models(region_id = "PJM"):
         0
     )
 
+    os.makedirs("../../evaluation_metrics", exist_ok=True)
+    save_path = f"../../evaluation_metrics/evaluation_metrics_{region_id.lower()}.csv"
+
     results.to_csv(
-        f"evaluation_metrics_{region_id.lower()}.csv",
+        save_path,
         index=False
     )
 
