@@ -62,6 +62,14 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
 
         df = df.pivot_table(index = "period", columns = "type-name", values = "value", aggfunc = "first")
 
+        # The EIA API returns "value" as a string, so pivoted columns come out as
+        # object dtype rather than numeric. That was harmless before (nothing did
+        # arithmetic on them in memory — writing to CSV and reading it back with
+        # pd.read_csv silently re-inferred the correct numeric dtype), but the
+        # Geothermal/Other merge below does real arithmetic, so it needs to happen
+        # on actual floats.
+        df = df.astype(float)
+
         print("\nMissing values before filling:")
         print(df.isna().sum()[df.isna().sum() > 0])
 
@@ -69,16 +77,19 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
             if col not in df.columns:
                 df[col] = 0
 
+        df = df[EXPECTED_COLS]
+        df = df.fillna(0)
+
         # EIA started reporting this region's geothermal generation as its own
         # category partway through the collection window (it was previously
         # folded into "Other"). Fold it back in so the feature is consistent
         # across the whole history instead of jumping from a constant zero to
-        # a real value partway through.
+        # a real value partway through. This must run after fillna(0): pivot_table
+        # leaves timestamps with no Geothermal record at all as NaN (not 0), and
+        # NaN + real_value = NaN, which would silently wipe out genuine Other
+        # data for every row before Geothermal existed as a reported category.
         df["Other"] = df["Other"] + df["Geothermal"]
         df["Geothermal"] = 0.0
-
-        df = df[EXPECTED_COLS]
-        df = df.fillna(0)
 
         print("\nFinal missing values:")
         print(df[EXPECTED_COLS].isna().sum())
