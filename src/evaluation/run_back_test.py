@@ -14,7 +14,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # Ensures the models are all initialized
     raw_grid_data = fetch_latest_eia_data(region_id = region_id, days_back = days_back, custom_end_date = custom_end_date)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
-    lstm_base_data = GridDataLoader(f"../../grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
+    lstm_base_data = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
     # Ensure that the columns indexes are consistently ordered and defined
     feature_cols = lstm_base_data.feature_cols
@@ -22,7 +22,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     model = GridPulseLSTM(input_size=9, hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
-    model.load_state_dict(torch.load(f"../../saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
+    model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()
 
@@ -30,7 +30,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # lstm_base_data.scaler (which would silently recompute from whatever
     # grid_history_{region}_v4.csv contains today, and drift out of sync with the
     # model if that file is ever regenerated)
-    scaler = joblib.load(f"../../saved_models/scaler_{region_id.lower()}_v2.pkl")
+    scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
     eval_hours = 168
     forecast_hours = 24
@@ -78,8 +78,8 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     plt.xticks(rotation=20)
     plt.tight_layout()
 
-    os.makedirs("../../visuals", exist_ok=True)
-    plt.savefig(f"../../visuals/{fuel_name.lower()}_continuous_backtest_comparison_{region_id.lower()}.png", dpi=300)
+    os.makedirs("visuals", exist_ok=True)
+    plt.savefig(f"visuals/{fuel_name.lower()}_continuous_backtest_comparison_{region_id.lower()}.png", dpi=300)
     plt.show()
     plt.close()
 

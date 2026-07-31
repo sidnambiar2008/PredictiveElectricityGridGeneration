@@ -20,7 +20,7 @@ BATCH_SIZE = 32
 
 def evaluate_models(region_id = "PJM"):
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    dataset = GridDataLoader(f"../../grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
+    dataset = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
     # Ensures the same breakdown of the dataset, now focusion on validation
     train_size = int(len(dataset) * 0.85)
@@ -29,14 +29,14 @@ def evaluate_models(region_id = "PJM"):
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
     model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
-    model.load_state_dict(torch.load(f"../../saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
+    model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
                                      map_location = device))
     model.eval()
 
     # Loads the scaler this specific model was trained against, instead of trusting
     # dataset.scaler (which would silently recompute from whatever grid_history_{region}_v4.csv
     # contains today, and drift out of sync with the model if that file ever changes)
-    scaler = joblib.load(f"../../saved_models/scaler_{region_id.lower()}_v2.pkl")
+    scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
     predictions = []
     targets = []
@@ -164,8 +164,8 @@ def evaluate_models(region_id = "PJM"):
         0
     )
 
-    os.makedirs("../../evaluation_metrics", exist_ok=True)
-    save_path = f"../../evaluation_metrics/evaluation_metrics_{region_id.lower()}.csv"
+    os.makedirs("evaluation_metrics", exist_ok=True)
+    save_path = f"evaluation_metrics/evaluation_metrics_{region_id.lower()}_v2.csv"
 
     results.to_csv(
         save_path,
