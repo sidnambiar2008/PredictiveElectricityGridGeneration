@@ -80,7 +80,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     plt.tight_layout()
 
     os.makedirs("../../visuals", exist_ok=True)
-    plt.savefig(f"../../visuals/{fuel_name.lower()}_continuous_backtest_comparison.png", dpi=300)
+    plt.savefig(f"../../visuals/{fuel_name.lower()}_continuous_backtest_comparison_{region_id.lower()}.png", dpi=300)
     plt.show()
     plt.close()
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     spring_storm_date = pd.Timestamp("2026-04-15")
     winter_test_date_two = pd.Timestamp("2022-12-22")
 
-    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Natural Gas", days_back=15, custom_end_date=winter_test_date_two)
+    results = evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back=15, custom_end_date=winter_test_date_two)
 
     print("\n--- QUICK RESULTS SUMMARY ---")
     print(f"Target Fuel Source: {results['fuel_name']}")

@@ -58,7 +58,7 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     plt.tight_layout()
 
     os.makedirs("visuals", exist_ok=True)
-    plt.savefig(f"visuals/{fuel_name.lower()}_baseline_lstm_comparison_{lookback_window}.png", dpi=300)
+    plt.savefig(f"visuals/{fuel_name.lower()}_baseline_lstm_comparison_{region_id.lower()}_{lookback_window}.png", dpi=300)
     plt.show()
 
     plt.close()
