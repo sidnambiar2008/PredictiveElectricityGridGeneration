@@ -13,11 +13,9 @@ LEARNING_RATE = 0.001
 EPOCHS = 15
 
 def train_model(region):
-    # Hardware Anchors
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"💻 Training hardware detected: {device.type.upper()}")
 
-    # Pipeline Processing
     dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region.lower()}_v4.csv")
 
     # Ensures we have some data for training and validation
@@ -31,7 +29,6 @@ def train_model(region):
     train_loader = DataLoader(dataset = train_subset, batch_size = BATCH_SIZE, shuffle = False)
     val_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
 
-    # Model Instantiation
     model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -41,15 +38,12 @@ def train_model(region):
     for epoch in range(1, EPOCHS+1):
         model.train()
 
-        # Variable that helps logging the loss
         running_loss = 0.0
 
-        # Provides a comparison to calculate the error of the prediction
         for (x_batch, y_batch) in train_loader:
             x_batch = x_batch.to(device)
             y_batch = y_batch.to(device)
 
-            # 5 step sequence to optimize predictions
             optimizer.zero_grad()
             predictions = model(x_batch)
             loss = loss_fn(predictions, y_batch)

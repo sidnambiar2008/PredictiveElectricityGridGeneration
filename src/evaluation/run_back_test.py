@@ -11,12 +11,11 @@ from sklearn.metrics import mean_absolute_error
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
 
-    # Ensures the models are all initialized
     raw_grid_data = fetch_latest_eia_data(region_id = region_id, days_back = days_back, custom_end_date = custom_end_date)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
     lstm_base_data = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
-    # Ensure that the columns indexes are consistently ordered and defined
+    # Column order must match what the model was trained on (GridDataLoader.feature_cols)
     feature_cols = lstm_base_data.feature_cols
     fuel_idx = feature_cols.index(fuel_name)
 
@@ -62,7 +61,6 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     plot_lstm = pd.Series(lstm_predictions, index=eval_index)
     plot_base = pd.Series(baseline_predictions, index=eval_index)
 
-    # 4. Generate the full-length multi-line chart
     plt.figure(figsize=[14, 6])
     plt.plot(eval_index, actuals.values, label="True Actual Generation", color="black", linewidth=2)
     plt.plot(eval_index, plot_base.values, label="Diurnal Mean Baseline", color="orange", linestyle="--",
@@ -87,7 +85,6 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     base_mae = mean_absolute_error(actuals, plot_base)
     net_improvement = ((base_mae - lstm_mae) / base_mae) * 100
 
-    # Return metrics as a clean dictionary for multi-run tracking
     return {
         "region_id": region_id,
         "fuel_name": fuel_name,

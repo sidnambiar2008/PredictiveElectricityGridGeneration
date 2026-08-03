@@ -9,16 +9,15 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
         are based with enough data points.
     """
 
-    # 1. Dynamically locate where the forecast data actually begins (skipping the initial NaNs)
+    # Locate where the forecast data actually begins (skipping the initial NaNs)
     first_valid_date = baseline_df[fuel_name].first_valid_index()
 
     if first_valid_date is None:
         raise ValueError(f"The forecast dataframe contains only NaN values for {fuel_name}.")
 
     lookback_window = 168
-    forecast_hours = 24
 
-    # Graphs 7 days of data starting from the earliest data point for simplicity
+    # Plot the most recent 7 days of history alongside the forecast
     actual_slice = actual_df.iloc[-lookback_window:][fuel_name]
     baseline_forecast = baseline_df[fuel_name]
     lstm_forecast = lstm_df[fuel_name]
@@ -36,12 +35,10 @@ def plot_fuel_forecast(actual_df: pd.DataFrame, lstm_df: pd.DataFrame, baseline_
     extended_baseline = pd.Series(data=[last_actual_value] + baseline_forecast_list, index = extended_index)
     extended_lstm = pd.Series(data=[last_actual_value] + lstm_forecast_list, index = extended_index)
 
-    # Make two graphs with the actual energy generation and forecasted energy generation
     plt.plot(actual_slice.index, actual_slice.values, label=f"Actual {fuel_name} Generation", color="black", linewidth=2)
     plt.plot(extended_baseline.index, extended_baseline.values, label = "Diurnal Mean Prediction", color="orange", linestyle="--", linewidth=2)
     plt.plot(extended_lstm.index, extended_lstm.values, label="LSTM Horizon Forecast", color="red", linestyle="solid", linewidth=2)
 
-    # Customize the graph to make it more readable and fits all the data in the graph
     plt.title(f"GridPulse Analysis: {region_id} {fuel_name} Generation & Forecast", fontsize=14, fontweight="bold")
     plt.xlabel("Date & Time (UTC)", fontsize=12)
     plt.ylabel("Generation Output (Megawatts)", fontsize=12)

@@ -22,7 +22,8 @@ def evaluate_models(region_id = "PJM"):
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     dataset = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
-    # Ensures the same breakdown of the dataset, now focusion on validation
+    # Must match train.py's split exactly, so these indices are the same
+    # held-out hours the model never trained on
     train_size = int(len(dataset) * 0.85)
     validation_indices = list(range(train_size, len(dataset)))
     validation_subset = Subset(dataset, validation_indices)
@@ -91,7 +92,6 @@ def evaluate_models(region_id = "PJM"):
     lstm_rmses = []
     lstm_r2s = []
 
-    # Calculates various statistics
     for i, fuel in enumerate(dataset.feature_cols):
         lstm_mae = mean_absolute_error(
             targets[:, i],

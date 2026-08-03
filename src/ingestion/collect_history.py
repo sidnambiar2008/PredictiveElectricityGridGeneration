@@ -116,7 +116,6 @@ def main():
             region_id=region
         )
 
-        # Diagnostic Telemetry Checkpoints:
         print("\n Checking dataframe dimensions before saving:")
         print("Expected hourly rows:", 7 * 24)
         print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
@@ -125,7 +124,8 @@ def main():
         if clean_history_df.empty:
             print(" WARNING: The dataframe is empty! The pivot key might be mismatched.")
         else:
-            # 2. Explicitly name the index for your data loader tracking constraints
+            # Must match the index_col="period" read below, and what
+            # GridDataLoader expects when it reads this CSV back in.
             clean_history_df.index.name = "period"
 
             if os.path.exists(save_path):
@@ -134,10 +134,14 @@ def main():
             else:
                 updated_df = clean_history_df
 
+            # Keep the newer of any overlapping hours instead of appending
+            # duplicates, since this week's slice always overlaps the tail
+            # of what's already on disk.
             updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
             updated_df = updated_df.sort_index()
 
-            # 3. Save the file cleanly
+            # mode="w" is safe here: updated_df already contains the full
+            # merged history (existing + new), not just this week's slice.
             updated_df.to_csv(save_path, index=True, mode="w")
 
 
