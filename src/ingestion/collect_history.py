@@ -128,9 +128,18 @@ def main():
             # 2. Explicitly name the index for your data loader tracking constraints
             clean_history_df.index.name = "period"
 
+            if os.path.exists(save_path):
+                real_df = pd.read_csv(save_path, index_col="period", parse_dates=True)
+                updated_df = pd.concat([real_df, clean_history_df], axis=0)
+            else:
+                updated_df = clean_history_df
+
+            updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
+            updated_df = updated_df.sort_index()
+
             # 3. Save the file cleanly
-            clean_history_df.to_csv(save_path, index=True, mode="w")
-            print(f"\n SUCCESS! 3-Year baseline successfully saved at: {save_path}")
+            updated_df.to_csv(save_path, index=True, mode="w")
+
 
 if __name__ == "__main__":
     main()
