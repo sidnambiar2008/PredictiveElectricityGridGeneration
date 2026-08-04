@@ -17,7 +17,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
 
        Raises:
            ValueError: If no data is fetched, indicating a wrong path.
-           RuntimeError: If the fetch is unsuccessful, indicating a request error.
+           Exception: If the fetch is unsuccessful, indicating a request error.
        """
 
     api_key = os.getenv("EIA_API_KEY")
