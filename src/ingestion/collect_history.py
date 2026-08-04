@@ -154,7 +154,7 @@ def main():
                 # of what's already on disk.
                 updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
                 updated_df = updated_df.sort_index()
-    
+
                 # mode="w" is safe here: updated_df already contains the full
                 # merged history (existing + new), not just this week's slice.
                 updated_df.to_csv(save_path, index=True, mode="w")

@@ -88,7 +88,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
         index="period",
         columns="type-name",
         aggfunc="last"
-    )
+    ).fillna(0)
 
     clean_matrix = clean_matrix.sort_index().astype(float)
 
