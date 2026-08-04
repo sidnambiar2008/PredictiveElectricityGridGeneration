@@ -2,6 +2,13 @@ from torch import nn
 
 
 class GridPulseLSTM(nn.Module):
+    """
+       LSTM-based forecasting model for sequential grid data.
+
+       Input shape:  (batch, sequence_length, input_size)
+       Output shape: (batch, forecast_horizon, input_size)
+    """
+
     def __init__(self, input_size: int = 9, hidden_size: int = 64, num_layers: int = 1, forecast_horizon: int = 24):
         super().__init__()
         self.input_size = input_size

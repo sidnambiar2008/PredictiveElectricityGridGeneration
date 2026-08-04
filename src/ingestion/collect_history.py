@@ -8,96 +8,109 @@ EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petro
 
 
 def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
-        api_key = os.getenv("EIA_API_KEY")
+    """
+    Fetch a specific region of the EIA data to add to the region's historical csv
 
-        if not api_key:
-            raise ValueError("Missing EIA_API_KEY environment variable. Please export it in your terminal.")
+    Args:
+        start_date (datetime): Start date of the historical data
+        end_date (datetime): End date of the historical data
+        region_id (string): EIA region code
 
-        print(f"Connecting to the EIA API for {region_id}")
+    Returns:
+        dataframe: Sliver of the EIA data
+    """
 
-        BASE_URL = "https://api.eia.gov"
 
-        url = f"{BASE_URL}/v2/electricity/rto/fuel-type-data/data/"
-        params = {
-            "api_key": api_key,
-            "frequency": "hourly",
-            "start": start_date,
-            "end": end_date,
-            "data[0]": "value",
-            "facets[respondent][]": region_id,
-            "sort[0][column]": "period",
-            "sort[0][direction]": "asc",
-            "length": 5000,
-            "offset": 0
-        }
-        all_records = []
-        total_records = None
+    api_key = os.getenv("EIA_API_KEY")
 
-        while True:
-            request = requests.get(url, params=params)
-            if request.status_code != 200:
-                raise RuntimeError(
-                    f"EIA request failed for {region_id}: {request.status_code}"
-                )
+    if not api_key:
+        raise ValueError("Missing EIA_API_KEY environment variable. Please export it in your terminal.")
 
-            request_data = request.json()
+    print(f"Connecting to the EIA API for {region_id}")
 
-            data_records = request_data.get("response", {}).get("data", [])
-            total_records = int(request_data.get("response", {}).get("total", 0))
+    BASE_URL = "https://api.eia.gov"
 
-            all_records.extend(data_records)
+    url = f"{BASE_URL}/v2/electricity/rto/fuel-type-data/data/"
+    params = {
+        "api_key": api_key,
+        "frequency": "hourly",
+        "start": start_date,
+        "end": end_date,
+        "data[0]": "value",
+        "facets[respondent][]": region_id,
+        "sort[0][column]": "period",
+        "sort[0][direction]": "asc",
+        "length": 5000,
+        "offset": 0
+    }
+    all_records = []
+    total_records = None
 
-            if not data_records:
-                print(f"No data available for this balancing authority, {region_id}")
-                break
+    while True:
+        request = requests.get(url, params=params)
+        if request.status_code != 200:
+            raise RuntimeError(
+                f"EIA request failed for {region_id}: {request.status_code}"
+            )
 
-            params["offset"] += params["length"]
-            if params["offset"] >= total_records:
-                break
+        request_data = request.json()
 
-        df = pd.DataFrame(all_records)
+        data_records = request_data.get("response", {}).get("data", [])
+        total_records = int(request_data.get("response", {}).get("total", 0))
 
-        if df.empty:
-            raise ValueError(f"No data returned for {region_id}")
+        all_records.extend(data_records)
 
-        df["period"] = pd.to_datetime(df["period"])
+        if not data_records:
+            print(f"No data available for this balancing authority, {region_id}")
+            break
 
-        df = df.pivot_table(index = "period", columns = "type-name", values = "value", aggfunc = "first")
+        params["offset"] += params["length"]
+        if params["offset"] >= total_records:
+            break
 
-        # The EIA API returns "value" as a string, so pivoted columns come out as
-        # object dtype rather than numeric. That was harmless before (nothing did
-        # arithmetic on them in memory — writing to CSV and reading it back with
-        # pd.read_csv silently re-inferred the correct numeric dtype), but the
-        # Geothermal/Other merge below does real arithmetic, so it needs to happen
-        # on actual floats.
-        df = df.astype(float)
+    df = pd.DataFrame(all_records)
 
-        print("\nMissing values before filling:")
-        print(df.isna().sum()[df.isna().sum() > 0])
+    if df.empty:
+        raise ValueError(f"No data returned for {region_id}")
 
-        for col in EXPECTED_COLS:
-            if col not in df.columns:
-                df[col] = 0
+    df["period"] = pd.to_datetime(df["period"])
 
-        df = df[EXPECTED_COLS]
-        df = df.fillna(0)
+    df = df.pivot_table(index = "period", columns = "type-name", values = "value", aggfunc = "first")
 
-        # EIA started reporting this region's geothermal generation as its own
-        # category partway through the collection window (it was previously
-        # folded into "Other"). Fold it back in so the feature is consistent
-        # across the whole history instead of jumping from a constant zero to
-        # a real value partway through. This must run after fillna(0): pivot_table
-        # leaves timestamps with no Geothermal record at all as NaN (not 0), and
-        # NaN + real_value = NaN, which would silently wipe out genuine Other
-        # data for every row before Geothermal existed as a reported category.
-        df["Other"] = df["Other"] + df["Geothermal"]
-        df["Geothermal"] = 0.0
+    # The EIA API returns "value" as a string, so pivoted columns come out as
+    # object dtype rather than numeric. That was harmless before (nothing did
+    # arithmetic on them in memory — writing to CSV and reading it back with
+    # pd.read_csv silently re-inferred the correct numeric dtype), but the
+    # Geothermal/Other merge below does real arithmetic, so it needs to happen
+    # on actual floats.
+    df = df.astype(float)
 
-        print("\nFinal missing values:")
-        print(df[EXPECTED_COLS].isna().sum())
+    print("\nMissing values before filling:")
+    print(df.isna().sum()[df.isna().sum() > 0])
 
-        df = df.sort_index()
-        return df
+    for col in EXPECTED_COLS:
+        if col not in df.columns:
+            df[col] = 0
+
+    df = df[EXPECTED_COLS]
+    df = df.fillna(0)
+
+    # EIA started reporting this region's geothermal generation as its own
+    # category partway through the collection window (it was previously
+    # folded into "Other"). Fold it back in so the feature is consistent
+    # across the whole history instead of jumping from a constant zero to
+    # a real value partway through. This must run after fillna(0): pivot_table
+    # leaves timestamps with no Geothermal record at all as NaN (not 0), and
+    # NaN + real_value = NaN, which would silently wipe out genuine Other
+    # data for every row before Geothermal existed as a reported category.
+    df["Other"] = df["Other"] + df["Geothermal"]
+    df["Geothermal"] = 0.0
+
+    print("\nFinal missing values:")
+    print(df[EXPECTED_COLS].isna().sum())
+
+    df = df.sort_index()
+    return df
 
 
 def main():

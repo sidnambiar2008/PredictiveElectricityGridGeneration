@@ -5,19 +5,14 @@ import time
 
 def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp = None):
     """
-       Fetches the latest data for each fuel in the electricity grid
-       to ensure the model has 7 days of historical data and 7 days to evaluate
-       the predictions
-
-       This function takes region_id and number of days back. Setting this allows for
-       flexibility with the historical timeframe and location
+       Fetch latest grid fuel data for historical lookback and evaluation
 
        Args:
            region_id (string): The region code that is current being fetched
            days_back (int): The number of days back to allow
 
        Returns:
-           dataframe: Historical dat
+           dataframe: Historical data
 
        Raises:
            ValueError: If no data is fetched, indicating a wrong path.

@@ -10,6 +10,28 @@ from src.models.GridPulseLSTM import GridPulseLSTM
 from sklearn.metrics import mean_absolute_error
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
+    """
+    Compares the accuracy of the baseline and LSTM to the historical data of the specific region/fuel
+
+    Args:
+        region_id (string): EIA region id
+        fuel_name(string) : EIA fuel name
+        days_back(int): Days back specified in EIA request
+        custom_end_date(Datetime): Specified date to acquire historical data from
+
+    Returns:
+        region_id
+        fuel_name
+        end_date
+        lstm_mae
+        base_mae
+        net_improvement
+        eval_index
+        actuals
+        plot_base
+        plot_lstm
+    """
+
 
     raw_grid_data = fetch_latest_eia_data(region_id = region_id, days_back = days_back, custom_end_date = custom_end_date)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)

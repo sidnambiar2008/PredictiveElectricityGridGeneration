@@ -12,11 +12,27 @@ BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 EPOCHS = 15
 
-def train_model(region):
+
+def train_model(region_str):
+    """
+    Train the LSTM model for a specified region
+
+    Args:
+        region_str (string): The region name
+    Returns:
+        None. Saves model weights and scaler to the saved_models directory
+    Side Effects:
+        Prints Hardware detected
+        Prints Epoch Number
+        Prints Mean Training Loss
+        Prints Validation Loss
+        Prints Scaler/Model Save Path
+    """
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"💻 Training hardware detected: {device.type.upper()}")
 
-    dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region.lower()}_v4.csv")
+    dataset = GridDataLoader(grid_history_csv=f"grid_data/raw/grid_history_{region_str.lower()}_v4.csv")
 
     # Ensures we have some data for training and validation
     train_size = int(len(dataset) * 0.85)
@@ -78,14 +94,14 @@ def train_model(region):
         print(f"| Validation Loss: {val_loss:.6f}")
 
     os.makedirs("saved_models", exist_ok=True)
-    save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region.lower()}_v2.pt")
+    save_path = os.path.join("saved_models", f"lstm_grid_pulse_24h_{region_str.lower()}_v2.pt")
     torch.save(model.state_dict(), save_path)
     print(f"\n Training complete! Model weights successfully stored at: {save_path}")
 
     # Persists the exact scaler this model was trained against, so later scripts
     # transform live/validation data the same way regardless of what the CSV
     # on disk looks like by the time they run
-    scaler_path = os.path.join("saved_models", f"scaler_{region.lower()}_v2.pkl")
+    scaler_path = os.path.join("saved_models", f"scaler_{region_str.lower()}_v2.pkl")
     joblib.dump(dataset.scaler, scaler_path)
     print(f" Scaler saved alongside model at: {scaler_path}")
 

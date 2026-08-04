@@ -5,6 +5,15 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 class GridDataLoader(Dataset):
+    """
+    Loads GridPulse Data and scales the training data for the LSTM
+
+    Attributes:
+        lookback_steps: Length of the memory cell in hours
+        forecast_horizon: How far ahead the LSTM predicts
+        feature_cols: List of the EIA fuels
+    """
+
     def __init__(self, grid_history_csv, lookback_steps: int=168, forecast_horizon: int = 24):
         self.lookback_steps = lookback_steps
         self.forecast_horizon = forecast_horizon

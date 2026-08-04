@@ -9,6 +9,16 @@ from src.visualization.future_visualizer import plot_fuel_forecast
 from src.models.GridPulseLSTM import GridPulseLSTM
 
 def predict_24_hours_hours_ahead(region_id = "PJM"):
+    """
+    Plots the prediction of the baseline and LSTM using inference of the next 24 hours
+
+    Args:
+        region_id (string): The EIA region id:
+    Side Effects:
+        Print Clean Energy Statistics
+        Plots Energy Expected Tomorrow
+    """
+
     # 11 days back leaves a comfortable margin over the 168-hour (7-day)
     # lookback the model needs, in case the API is missing the most recent hours
     raw_grid_data = fetch_latest_eia_data(region_id, days_back=11)

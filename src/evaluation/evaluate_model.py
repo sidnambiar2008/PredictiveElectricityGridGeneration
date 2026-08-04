@@ -19,6 +19,18 @@ from torch.utils.data import DataLoader, Subset
 BATCH_SIZE = 32
 
 def evaluate_models(region_id = "PJM"):
+    """
+    Compare the errors of the baseline and LSTM models
+    
+    Args:
+        region_id(string): EIA region ID 
+
+    Returns:
+        None. Saves a CSV to the evaluation_metrics directory
+    Raises:
+        FileNotFoundError: If the models weights or dataset is missing
+    """
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     dataset = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
