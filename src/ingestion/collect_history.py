@@ -124,39 +124,43 @@ def main():
     for region in regions:
         save_path = f"grid_data/raw/grid_history_{region.lower()}_v4.csv"
 
-        clean_history_df = fetch_historical_slice(
-            start_date=start_date_dt.strftime("%Y-%m-%dT%H"),
-            end_date=end_date_dt.strftime("%Y-%m-%dT%H"),
-            region_id=region
-        )
+        try:
+            clean_history_df = fetch_historical_slice(
+                start_date=start_date_dt.strftime("%Y-%m-%dT%H"),
+                end_date=end_date_dt.strftime("%Y-%m-%dT%H"),
+                region_id=region
+            )
 
-        print("\n Checking dataframe dimensions before saving:")
-        print("Expected hourly rows:", 7 * 24)
-        print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
-        print(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
+            print("\n Checking dataframe dimensions before saving:")
+            print("Expected hourly rows:", 7 * 24)
+            print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
+            print(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
 
-        if clean_history_df.empty:
-            print(" WARNING: The dataframe is empty! The pivot key might be mismatched.")
-        else:
-            # Must match the index_col="period" read below, and what
-            # GridDataLoader expects when it reads this CSV back in.
-            clean_history_df.index.name = "period"
-
-            if os.path.exists(save_path):
-                real_df = pd.read_csv(save_path, index_col="period", parse_dates=True)
-                updated_df = pd.concat([real_df, clean_history_df], axis=0)
+            if clean_history_df.empty:
+                print(" WARNING: The dataframe is empty! The pivot key might be mismatched.")
             else:
-                updated_df = clean_history_df
+                # Must match the index_col="period" read below, and what
+                # GridDataLoader expects when it reads this CSV back in.
+                clean_history_df.index.name = "period"
 
-            # Keep the newer of any overlapping hours instead of appending
-            # duplicates, since this week's slice always overlaps the tail
-            # of what's already on disk.
-            updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
-            updated_df = updated_df.sort_index()
+                if os.path.exists(save_path):
+                    real_df = pd.read_csv(save_path, index_col="period", parse_dates=True)
+                    updated_df = pd.concat([real_df, clean_history_df], axis=0)
+                else:
+                    updated_df = clean_history_df
 
-            # mode="w" is safe here: updated_df already contains the full
-            # merged history (existing + new), not just this week's slice.
-            updated_df.to_csv(save_path, index=True, mode="w")
+                # Keep the newer of any overlapping hours instead of appending
+                # duplicates, since this week's slice always overlaps the tail
+                # of what's already on disk.
+                updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
+                updated_df = updated_df.sort_index()
+    
+                # mode="w" is safe here: updated_df already contains the full
+                # merged history (existing + new), not just this week's slice.
+                updated_df.to_csv(save_path, index=True, mode="w")
+        except Exception as error:
+            print(f"Error while fetching historical data for {region}: {error}")
+
 
 
 if __name__ == "__main__":

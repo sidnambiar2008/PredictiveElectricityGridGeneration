@@ -109,5 +109,10 @@ def train_model(region_str):
 if __name__ == "__main__":
     regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
     for region in regions:
-        print(f"\n========== TRAINING {region} ==========")
-        train_model(region)
+        try:
+            print(f"\n========== TRAINING {region} ==========")
+            train_model(region)
+        except Exception as error:
+            print(f"Training failed for {region}: {error}")
+
+
