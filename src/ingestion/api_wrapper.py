@@ -10,6 +10,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
        Args:
            region_id (string): The region code that is current being fetched
            days_back (int): The number of days back to allow
+           custom_end_date(pd.Timestamp): End date of the historical data
 
        Returns:
            dataframe: Historical data

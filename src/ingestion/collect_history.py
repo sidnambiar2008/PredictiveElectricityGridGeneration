@@ -17,9 +17,8 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
         region_id (string): EIA region code
 
     Returns:
-        dataframe: Sliver of the EIA data
+        dataframe: Slice of the EIA data
     """
-
 
     api_key = os.getenv("EIA_API_KEY")
 
@@ -114,6 +113,8 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
 
 
 def main():
+    """Runs the weekly incremental fetch for all 7 regions, appending to each region's history CSV"""
+
     end_date_dt = datetime.utcnow()
     start_date_dt = end_date_dt - timedelta(days=7)
 
