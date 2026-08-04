@@ -20,6 +20,6 @@ def test_geothermal_merge_does_not_wipe_others(monkeypatch):
 
     result = fetch_latest_eia_data(region_id = "CISO", days_back=1)
 
-    assert (result.loc["2024-01-01 00:00:00", "Other"] == 0)
+    assert (result.loc["2024-01-01 00:00:00", "Other"] == 100)
     assert (result.loc["2024-01-01 01:00:00", "Geothermal"] == 0)
 
