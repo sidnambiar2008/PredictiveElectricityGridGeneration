@@ -18,13 +18,13 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
         region_id (string): EIA region id
         fuel_name(string) : EIA fuel name
         days_back(int): Days back specified in EIA request
-        custom_end_date(Datetime): Specified date to acquire historical data from
+        custom_end_date(pd.Timestamp): Specified date to acquire historical data from
 
     Returns:
         dict: A dictionary containing model evaluation metrics and series data.
             - region_id (str): EIA region ID.
             - fuel_name (str): Name of the fuel type analyzed.
-            - end_date (pd.Timestamp): The final date in the grid dataset index.
+            - end_date (datetime.date): The final date in the grid dataset index.
             - lstm_mae (float): Mean Absolute Error of the LSTM model.
             - base_mae (float): Mean Absolute Error of the baseline model.
             - improvement (float): Net improvement of LSTM over the baseline.

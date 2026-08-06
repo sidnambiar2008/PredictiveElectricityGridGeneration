@@ -1,20 +1,21 @@
 import os
 import pandas as pd
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.regions import REGIONS
+import logging
 
 
 EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
+logger = logging.getLogger(__name__)
 
-
-def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
+def fetch_historical_slice(start_date: str, end_date: str, region_id: str = "CISO"):
     """
     Fetch a specific region of the EIA data to add to the region's historical csv
 
     Args:
-        start_date (datetime): Start date of the historical data
-        end_date (datetime): End date of the historical data
+        start_date (string): Start date of the historical data, formatted as YYYY-MM-DDTHH
+        end_date (string): End date of the historical data formatted as YYYY-MM-DDTHH
         region_id (string): EIA region code
 
     Returns:
@@ -26,7 +27,7 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
     if not api_key:
         raise ValueError("Missing EIA_API_KEY environment variable. Please export it in your terminal.")
 
-    print(f"Connecting to the EIA API for {region_id}")
+    logger.info(f"Connecting to the EIA API for {region_id}")
 
     BASE_URL = "https://api.eia.gov"
 
@@ -61,7 +62,7 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
         all_records.extend(data_records)
 
         if not data_records:
-            print(f"No data available for this balancing authority, {region_id}")
+            logger.warning(f"No data available for this balancing authority, {region_id}")
             break
 
         params["offset"] += params["length"]
@@ -85,8 +86,8 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
     # on actual floats.
     df = df.astype(float)
 
-    print("\nMissing values before filling:")
-    print(df.isna().sum()[df.isna().sum() > 0])
+    logger.info("\nMissing values before filling:")
+    logger.info(df.isna().sum()[df.isna().sum() > 0])
 
     for col in EXPECTED_COLS:
         if col not in df.columns:
@@ -106,8 +107,8 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
     df["Other"] = df["Other"] + df["Geothermal"]
     df["Geothermal"] = 0.0
 
-    print("\nFinal missing values:")
-    print(df[EXPECTED_COLS].isna().sum())
+    logger.info("\nFinal missing values:")
+    logger.info(df[EXPECTED_COLS].isna().sum())
 
     df = df.sort_index()
     return df
@@ -116,7 +117,7 @@ def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
 def main():
     """Runs the weekly incremental fetch for all 7 regions, appending to each region's history CSV"""
 
-    end_date_dt = datetime.utcnow()
+    end_date_dt = datetime.now(timezone.utc)
     start_date_dt = end_date_dt - timedelta(days=7)
 
     os.makedirs("grid_data/raw", exist_ok=True)
@@ -132,13 +133,13 @@ def main():
                 region_id=region
             )
 
-            print("\n Checking dataframe dimensions before saving:")
-            print("Expected hourly rows:", 7 * 24)
-            print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
-            print(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
+            logger.info("\n Checking dataframe dimensions before saving:")
+            logger.info(f"Expected hourly rows: {7 * 24}")
+            logger.info(f"   -> Dataframe Row Count: {len(clean_history_df)}")
+            logger.info(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
 
             if clean_history_df.empty:
-                print(" WARNING: The dataframe is empty! The pivot key might be mismatched.")
+                logger.warning("The dataframe is empty! The pivot key might be mismatched.")
             else:
                 # Must match the index_col="period" read below, and what
                 # GridDataLoader expects when it reads this CSV back in.
@@ -160,9 +161,10 @@ def main():
                 # merged history (existing + new), not just this week's slice.
                 updated_df.to_csv(save_path, index=True, mode="w")
         except Exception as error:
-            print(f"Error while fetching historical data for {region}: {error}")
+            logger.error(f"Error while fetching historical data for {region}: {error}")
 
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
