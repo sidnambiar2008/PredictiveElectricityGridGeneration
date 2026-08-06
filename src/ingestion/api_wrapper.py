@@ -63,7 +63,15 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
 
     response = None
     for attempt in range(max_retries):
-        response = requests.get(url, params= params)
+        try:
+            response = requests.get(url, params= params)
+        except requests.exceptions.RequestException as network_error:
+            if attempt < max_retries - 1:
+                logger.warning(f" Error contacting EIA API: {network_error}. Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+                continue
+            else:
+                raise Exception(f"Failed to connect to EIA API after {max_retries} attempts: {network_error}")
 
         if response.status_code == 200:
             break
@@ -72,7 +80,6 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
             time.sleep(retry_delay)
         else:
             raise Exception(f"Failed to connect to EIA API after {max_retries} attempts. Last status code: {response.status_code}")
-
 
     raw_json = response.json()
 

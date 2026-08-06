@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timedelta, timezone
 from src.regions import REGIONS
 import logging
+import time
 
 
 EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
@@ -44,15 +45,34 @@ def fetch_historical_slice(start_date: str, end_date: str, region_id: str = "CIS
         "length": 5000,
         "offset": 0
     }
+
+    max_retries = 3
+    retry_delay = 5  # Seconds to wait
+
     all_records = []
     total_records = None
 
+    request = None
     while True:
-        request = requests.get(url, params=params)
-        if request.status_code != 200:
-            raise RuntimeError(
-                f"EIA request failed for {region_id}: {request.status_code}"
-            )
+        for attempt in range(max_retries):
+            try:
+                request = requests.get(url, params=params)
+            except requests.exceptions.RequestException as network_error:
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Network error fetching {region_id}: {network_error}. Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    raise Exception(f"Failed to connect to EIA API after {max_retries} attempts: {network_error}")
+
+            if request.status_code == 200:
+                break
+            elif attempt < max_retries - 1:
+                logger.warning(f" EIA Server timeout (Status: {request.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+            else:
+                raise RuntimeError(f"EIA request failed for {region_id}: {request.status_code}")
 
         request_data = request.json()
 
