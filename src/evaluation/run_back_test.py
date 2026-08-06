@@ -50,7 +50,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     else:
         device = torch.device("cpu")
 
-    model = GridPulseLSTM(input_size=9, hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
+    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()
@@ -68,12 +68,11 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     lstm_predictions = []
 
     historical_df = raw_grid_data.iloc[-(eval_hours+forecast_hours):-forecast_hours]
-    ground_truth_df = raw_grid_data.iloc[-forecast_hours:]
 
     baseline_forecast = baseline_model.predict(historical_df)
     baseline_predictions = baseline_forecast[fuel_name].iloc[0:24].values
 
-    live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).bfill().ffill().values
+    live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).ffill().bfill().values
     live_scaled_matrix = scaler.transform(live_raw_matrix)
 
     torch_input = torch.tensor(live_scaled_matrix, dtype=torch.float32).unsqueeze(0).to(device)

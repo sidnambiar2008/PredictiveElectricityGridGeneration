@@ -3,6 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 import os
 import joblib
+from src.regions import REGIONS
 
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.preprocessing.data_loader import GridDataLoader
@@ -51,7 +52,7 @@ def train_model(region_str):
     train_loader = DataLoader(dataset = train_subset, batch_size = BATCH_SIZE, shuffle = False)
     val_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
 
-    model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
+    model = GridPulseLSTM(input_size=len(dataset.feature_cols), hidden_size=64, forecast_horizon=24).to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -113,7 +114,7 @@ def train_model(region_str):
 
 
 if __name__ == "__main__":
-    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
+    regions = REGIONS
     for region in regions:
         try:
             print(f"\n========== TRAINING {region} ==========")

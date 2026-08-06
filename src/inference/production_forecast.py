@@ -52,8 +52,8 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
-        
-    model = GridPulseLSTM(input_size=9, hidden_size=64, forecast_horizon=24).to(device)
+
+    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=64, forecast_horizon=24).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()

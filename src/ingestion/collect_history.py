@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
+from src.regions import REGIONS
 
 
 EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
@@ -119,7 +120,7 @@ def main():
     start_date_dt = end_date_dt - timedelta(days=7)
 
     os.makedirs("grid_data/raw", exist_ok=True)
-    regions = ["CISO", "PJM", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
+    regions = REGIONS
 
     for region in regions:
         save_path = f"grid_data/raw/grid_history_{region.lower()}_v4.csv"

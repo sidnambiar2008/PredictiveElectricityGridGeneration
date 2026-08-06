@@ -3,6 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 import joblib
+from src.regions import REGIONS
 
 from sklearn.metrics import (
     mean_absolute_error,
@@ -47,7 +48,7 @@ def evaluate_models(region_id = "PJM"):
     validation_subset = Subset(dataset, validation_indices)
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
-    model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
+    model = GridPulseLSTM(input_size=len(dataset.feature_cols), hidden_size=64).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
                                      map_location = device))
     model.eval()
@@ -191,7 +192,7 @@ def evaluate_models(region_id = "PJM"):
     )
 
 if __name__ == "__main__":
-    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
+    regions = REGIONS
     for region in regions:
         try:
             evaluate_models(region)
