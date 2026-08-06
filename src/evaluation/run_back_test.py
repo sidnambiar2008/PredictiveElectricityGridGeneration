@@ -63,7 +63,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
     eval_hours = lstm_base_data.lookback_steps
-    forecast_hours = lstm.forecast_horizon
+    forecast_hours = lstm_base_data.forecast_horizon
 
     baseline_predictions = []
     lstm_predictions = []
