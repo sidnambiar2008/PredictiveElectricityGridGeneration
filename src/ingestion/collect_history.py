@@ -161,7 +161,7 @@ def main():
                 # merged history (existing + new), not just this week's slice.
                 updated_df.to_csv(save_path, index=True, mode="w")
         except Exception as error:
-            logger.error(f"Error while fetching historical data for {region}: {error}")
+            logger.exception(f"Error while fetching historical data for {region}: {error}")
 
 
 

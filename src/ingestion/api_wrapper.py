@@ -2,8 +2,11 @@ import os
 import requests
 import pandas as pd
 import time
+import logging
 
-def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp = None):
+logger = logging.getLogger(__name__)
+
+def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp | None = None):
     """
        Fetch latest grid fuel data for historical lookback and evaluation
 
@@ -34,7 +37,8 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
     else:
         end_date= pd.Timestamp.now()
 
-    start_date: pd.Timestamp = pd.Timestamp(end_date - pd.Timedelta(days=days_back))
+    # noinspection PyTypeChecker
+    start_date: pd.Timestamp = end_date - pd.Timedelta(days=days_back)
 
     # Format the timestamps to match the EIA API expectations (YYYY-MM-DDTHH)
     start_str = start_date.strftime("%Y-%m-%dT%H")
@@ -55,16 +59,16 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
     max_retries = 3
     retry_delay = 5  # Seconds to wait
 
-    print(f"Connecting to EIA API .. Fetching past {days_back} days for region: {region_id}")
+    logger.info(f"Connecting to EIA API .. Fetching past {days_back} days for region: {region_id}")
 
+    response = None
     for attempt in range(max_retries):
         response = requests.get(url, params= params)
 
-        if (response.status_code == 200):
+        if response.status_code == 200:
             break
-
         elif attempt < max_retries - 1:
-            print(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+            logger.warning(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
             time.sleep(retry_delay)
         else:
             raise Exception(f"Failed to connect to EIA API after {max_retries} attempts. Last status code: {response.status_code}")

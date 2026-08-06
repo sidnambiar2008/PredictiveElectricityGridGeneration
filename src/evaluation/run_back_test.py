@@ -9,6 +9,9 @@ from src.models.baseline import DiurnalRollingMeanBaseline
 from src.models.GridPulseLSTM import GridPulseLSTM
 from sklearn.metrics import mean_absolute_error
 from src.model_config import HIDDEN_SIZE, NUM_LAYERS
+import logging
+
+logger = logging.getLogger(__name__)
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
     """
@@ -126,7 +129,8 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     }
 
 if __name__ == "__main__":
-    print("Testing model on historical data!!!")
+    logging.basicConfig(level = logging.INFO)
+    logger.info("Testing model on historical data!!!")
 
     summer_test_date = pd.Timestamp("2026-07-28")
     winter_test_date = pd.Timestamp("2026-01-15 14:00:00")
@@ -135,10 +139,10 @@ if __name__ == "__main__":
 
     results = evaluate_model_performance(region_id = "PJM", fuel_name = "Natural Gas", days_back=15, custom_end_date=winter_test_date_two)
 
-    print("\n--- QUICK RESULTS SUMMARY ---")
-    print(f"Target Fuel Source: {results['fuel_name']}")
-    print(f"Evaluation End Date: {results['end_date']}")
-    print(f"LSTM Average Deviation (MAE): {results['lstm_mae']:.2f} MW")
-    print(f"Baseline Average Deviation (MAE): {results['base_mae']:.2f} MW")
-    print(f"Total Neural Network Advantage: {results['improvement']:.1f}% lower error")
+    logger.info("\n--- QUICK RESULTS SUMMARY ---")
+    logger.info(f"Target Fuel Source: {results['fuel_name']}")
+    logger.info(f"Evaluation End Date: {results['end_date']}")
+    logger.info(f"LSTM Average Deviation (MAE): {results['lstm_mae']:.2f} MW")
+    logger.info(f"Baseline Average Deviation (MAE): {results['base_mae']:.2f} MW")
+    logger.info(f"Total Neural Network Advantage: {results['improvement']:.1f}% lower error")
 

@@ -8,6 +8,9 @@ from src.models.baseline import DiurnalRollingMeanBaseline
 from src.visualization.future_visualizer import plot_fuel_forecast
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.model_config import HIDDEN_SIZE, NUM_LAYERS
+import logging
+
+logger = logging.getLogger(__name__)
 
 def predict_24_hours_hours_ahead(region_id = "PJM"):
     """
@@ -115,32 +118,33 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
     total_generation_hourly = lstm_df.sum(axis=1)
     grid_intensity_hourly = (hourly_co2_lbs / total_generation_hourly).fillna(0)
 
-    print("=======================================================")
-    print(f"CURRENT STATUS (Right Now):")
-    print(f"  ├─ Grid Cleanliness:     {cleanliness_now:.1f}% Clean Energy")
-    print(f"  ├─ Clean Generation:     {clean_now:,.0f} MW")
-    print(f"  ├─ Total Grid Demand:    {total_now:,.0f} MW")
-    print(f"  └─ Real-Time Carbon Box: {co2_now:.2f} Metric Tons CO2/hr")
-    print("-------------------------------------------------------")
-    print("DAY-AHEAD HORIZON FORECAST (Tomorrow's Peak Windows):")
-    print(
+    logger.info("=======================================================")
+    logger.info(f"CURRENT STATUS (Right Now):")
+    logger.info(f"  ├─ Grid Cleanliness:     {cleanliness_now:.1f}% Clean Energy")
+    logger.info(f"  ├─ Clean Generation:     {clean_now:,.0f} MW")
+    logger.info(f"  ├─ Total Grid Demand:    {total_now:,.0f} MW")
+    logger.info(f"  └─ Real-Time Carbon Box: {co2_now:.2f} Metric Tons CO2/hr")
+    logger.info("-------------------------------------------------------")
+    logger.info("DAY-AHEAD HORIZON FORECAST (Tomorrow's Peak Windows):")
+    logger.info(
         f"  ├─ Cleanest Scheduled Hour: {pd.to_datetime(clean_grid_percentage.idxmax()).strftime('%H:%M')} UTC ({clean_grid_percentage.max():.1f}% Clean)")
-    print(
+    logger.info(
         f"  ├─ Dirtiest Scheduled Hour:  {pd.to_datetime(clean_grid_percentage.idxmin()).strftime('%H:%M')} UTC ({clean_grid_percentage.min():.1f}% Clean)")
-    print(f"  ├─ 24-Hour Carbon Intensity: {grid_intensity_hourly.mean():.1f} lbs CO2/MWh")
-    print(f"  └─ Total Expected Tomorrow:  {total_co2_tomorrow:,.1f} Metric Tons of CO2")
-    print("=======================================================\n")
+    logger.info(f"  ├─ 24-Hour Carbon Intensity: {grid_intensity_hourly.mean():.1f} lbs CO2/MWh")
+    logger.info(f"  └─ Total Expected Tomorrow:  {total_co2_tomorrow:,.1f} Metric Tons of CO2")
+    logger.info("=======================================================\n")
 
     plot_fuel_forecast(actual_df=historical_df, lstm_df=lstm_df, baseline_df=forecast_matrix, fuel_name="Wind",
                        region_id = region_id)
 
 
 if __name__ == "__main__":
-    print("--- STARTING GRIDPULSE FORECASTING PIPELINE ---")
+    logging.basicConfig(level=logging.INFO)
+    logger.info("--- STARTING GRIDPULSE FORECASTING PIPELINE ---")
 
     try:
         predict_24_hours_hours_ahead("PJM")
 
     except Exception as error:
-        print(f"\n End-to-end pipeline failed: {error}")
+        logger.exception(f"\n End-to-end pipeline failed: {error}")
 

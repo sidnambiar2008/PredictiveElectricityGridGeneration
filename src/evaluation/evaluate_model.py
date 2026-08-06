@@ -17,7 +17,9 @@ from src.preprocessing.data_loader import GridDataLoader
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.models.baseline import DiurnalRollingMeanBaseline
 from torch.utils.data import DataLoader, Subset
+import logging
 
+logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 32
 
@@ -100,9 +102,9 @@ def evaluate_models(region_id = "PJM"):
 
     baseline_predictions = np.vstack(baseline_forecasts)
 
-    print("LSTM predictions:", predictions.shape)
-    print("Baseline predictions:", baseline_predictions.shape)
-    print("Targets:", targets.shape)
+    logger.info(f"LSTM predictions:, {predictions.shape}")
+    logger.info(f"Baseline predictions:, {baseline_predictions.shape}")
+    logger.info(f"Targets:, {targets.shape}")
 
     fuels = []
     baseline_maes = []
@@ -167,9 +169,9 @@ def evaluate_models(region_id = "PJM"):
         "Baseline R2": baseline_r2s,
         "LSTM R2": lstm_r2s
     })
-    print(results)
-    print("\nAverage Performance")
-    print(results.mean(numeric_only=True))
+    logger.info(results)
+    logger.info("\nAverage Performance")
+    logger.info(results.mean(numeric_only=True))
 
     results["MAE Improvement %"] = np.where(
         results["Baseline MAE"] != 0,
@@ -194,10 +196,11 @@ def evaluate_models(region_id = "PJM"):
     )
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     regions = REGIONS
     for region in regions:
         try:
             evaluate_models(region)
         except Exception as error:
-            print(f"Evaluation failed for {region}: {error}")
+            logger.exception(f"Evaluation failed for {region}: {error}")
 
