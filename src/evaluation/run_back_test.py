@@ -8,6 +8,7 @@ from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
 from src.models.GridPulseLSTM import GridPulseLSTM
 from sklearn.metrics import mean_absolute_error
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
     """
@@ -50,7 +51,7 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     else:
         device = torch.device("cpu")
 
-    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
+    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=HIDDEN_SIZE, num_layers=NUM_LAYERS, forecast_horizon=lstm_base_data.forecast_horizon).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()
@@ -61,8 +62,8 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # model if that file is ever regenerated)
     scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
-    eval_hours = 168
-    forecast_hours = 24
+    eval_hours = lstm_base_data.lookback_steps
+    forecast_hours = lstm.forecast_horizon
 
     baseline_predictions = []
     lstm_predictions = []

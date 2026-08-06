@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import joblib
 from src.regions import REGIONS
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
+
 
 from sklearn.metrics import (
     mean_absolute_error,
@@ -48,7 +50,7 @@ def evaluate_models(region_id = "PJM"):
     validation_subset = Subset(dataset, validation_indices)
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
-    model = GridPulseLSTM(input_size=len(dataset.feature_cols), hidden_size=64).to(device)
+    model = GridPulseLSTM(input_size=len(dataset.feature_cols),  hidden_size=HIDDEN_SIZE, num_layers= NUM_LAYERS).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
                                      map_location = device))
     model.eval()

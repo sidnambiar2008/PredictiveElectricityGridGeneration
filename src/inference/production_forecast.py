@@ -7,6 +7,7 @@ from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
 from src.visualization.future_visualizer import plot_fuel_forecast
 from src.models.GridPulseLSTM import GridPulseLSTM
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
 
 def predict_24_hours_hours_ahead(region_id = "PJM"):
     """
@@ -24,13 +25,12 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
     raw_grid_data = fetch_latest_eia_data(region_id, days_back=11)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
 
-    historical_df = raw_grid_data.iloc[-168:]
+    lstm_base_data = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
+    feature_cols = lstm_base_data.feature_cols
+
+    historical_df = raw_grid_data.iloc[-lstm_base_data.lookback_steps:]
 
     forecast_matrix = baseline_model.predict(historical_df)
-
-    lstm_base_data = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
-
-    feature_cols = lstm_base_data.feature_cols
 
     # Loads the scaler this model was trained against, rather than trusting
     # lstm_base_data.scaler (which would silently recompute from whatever
@@ -53,12 +53,12 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
     else:
         device = torch.device("cpu")
 
-    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=64, forecast_horizon=24).to(device)
+    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=HIDDEN_SIZE, num_layers=NUM_LAYERS, forecast_horizon=lstm_base_data.forecast_horizon).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()
 
-    lookback = 168
+    lookback = lstm_base_data.lookback_steps
 
     with torch.no_grad():
         memory_cell_window = live_scaled_matrix[-lookback:]

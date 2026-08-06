@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, Subset
 import os
 import joblib
 from src.regions import REGIONS
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
 
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.preprocessing.data_loader import GridDataLoader
@@ -52,7 +53,7 @@ def train_model(region_str):
     train_loader = DataLoader(dataset = train_subset, batch_size = BATCH_SIZE, shuffle = False)
     val_loader = DataLoader(dataset = val_subset, batch_size = BATCH_SIZE, shuffle = False)
 
-    model = GridPulseLSTM(input_size=len(dataset.feature_cols), hidden_size=64, forecast_horizon=24).to(device)
+    model = GridPulseLSTM(input_size=len(dataset.feature_cols), hidden_size=HIDDEN_SIZE, num_layers= NUM_LAYERS, forecast_horizon=dataset.forecast_horizon).to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
