@@ -93,9 +93,9 @@ def train_model(region_str):
                 predictions = model(x_batch)
 
                 if epoch == 1:
-                    logger.info(f"Input:, {x_batch.shape}")
-                    logger.info(f"Target:, {y_batch.shape}")
-                    logger.info(f"Prediction:, {predictions.shape}")
+                    logger.info(f"Input: {x_batch.shape}")
+                    logger.info(f"Target: {y_batch.shape}")
+                    logger.info(f"Prediction: {predictions.shape}")
 
                 loss = loss_fn(predictions, y_batch)
                 val_loss += loss.item()

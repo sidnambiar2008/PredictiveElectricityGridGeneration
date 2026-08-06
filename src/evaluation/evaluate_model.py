@@ -102,9 +102,9 @@ def evaluate_models(region_id = "PJM"):
 
     baseline_predictions = np.vstack(baseline_forecasts)
 
-    logger.info(f"LSTM predictions:, {predictions.shape}")
-    logger.info(f"Baseline predictions:, {baseline_predictions.shape}")
-    logger.info(f"Targets:, {targets.shape}")
+    logger.info(f"LSTM predictions: {predictions.shape}")
+    logger.info(f"Baseline predictions: {baseline_predictions.shape}")
+    logger.info(f"Targets: {targets.shape}")
 
     fuels = []
     baseline_maes = []
