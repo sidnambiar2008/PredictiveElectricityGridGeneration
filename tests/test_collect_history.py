@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 import src.ingestion.collect_history as collect_history
-from ingestion.collect_history import fetch_historical_slice
+from src.ingestion.collect_history import fetch_historical_slice
 
 
 def test_main_appends_across_runs_instead_of_overwriting(tmp_path, monkeypatch):
