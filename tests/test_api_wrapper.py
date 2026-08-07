@@ -24,6 +24,9 @@ def test_geothermal_merge_does_not_wipe_others(monkeypatch):
     assert (result.loc["2024-01-01 01:00:00", "Geothermal"] == 0)
 
 def test_successful_response_does_not_retry(monkeypatch):
+    # Guards against a real bug: the retry loop's success condition was once
+    # inverted (checking status_code != 200 instead of == 200), which caused
+    # even a genuinely successful first response to loop unnecessarily.
     call_count = {"n": 0}
 
     class FakeResponse:
@@ -42,6 +45,9 @@ def test_successful_response_does_not_retry(monkeypatch):
     assert call_count["n"] == 1
 
 def test_recovers_from_network_error(monkeypatch):
+    # Distinct from the Geothermal test above: this checks recovery from the
+    # request itself failing to complete (e.g. a dropped connection), not a
+    # bad HTTP status. The retry loop originally only handled the latter.
     call_count = {"n": 0}
 
     class FakeResponse:
