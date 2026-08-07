@@ -8,20 +8,53 @@ from src.ingestion.api_wrapper import fetch_latest_eia_data
 from src.models.baseline import DiurnalRollingMeanBaseline
 from src.models.GridPulseLSTM import GridPulseLSTM
 from sklearn.metrics import mean_absolute_error
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
+import logging
+
+logger = logging.getLogger(__name__)
 
 def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back = 15, custom_end_date = None):
+    """
+    Compares the accuracy of the baseline and LSTM to the historical data of the specific region/fuel
 
-    # Ensures the models are all initialized
+    Args:
+        region_id (string): EIA region id
+        fuel_name(string) : EIA fuel name
+        days_back(int): Days back specified in EIA request
+        custom_end_date(pd.Timestamp): Specified date to acquire historical data from
+
+    Returns:
+        dict: A dictionary containing model evaluation metrics and series data.
+            - region_id (str): EIA region ID.
+            - fuel_name (str): Name of the fuel type analyzed.
+            - end_date (datetime.date): The final date in the grid dataset index.
+            - lstm_mae (float): Mean Absolute Error of the LSTM model.
+            - base_mae (float): Mean Absolute Error of the baseline model.
+            - improvement (float): Net improvement of LSTM over the baseline.
+            - series_data (tuple): A 4-element tuple saved for graphing:
+                - eval_index (pd.Series): The evaluation timeline index.
+                - actuals (pd.Series): Observed historical values.
+                - plot_base (pd.Series): Baseline model predictions.
+                - plot_lstm (pd.Series): LSTM model predictions.
+    """
+
+
     raw_grid_data = fetch_latest_eia_data(region_id = region_id, days_back = days_back, custom_end_date = custom_end_date)
     baseline_model = DiurnalRollingMeanBaseline(window_days=7)
     lstm_base_data = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
-    # Ensure that the columns indexes are consistently ordered and defined
+    # Column order must match what the model was trained on (GridDataLoader.feature_cols)
     feature_cols = lstm_base_data.feature_cols
     fuel_idx = feature_cols.index(fuel_name)
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    model = GridPulseLSTM(input_size=9, hidden_size=64, num_layers=1, forecast_horizon=24).to(device)
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    model = GridPulseLSTM(input_size=len(feature_cols), hidden_size=HIDDEN_SIZE, num_layers=NUM_LAYERS, forecast_horizon=lstm_base_data.forecast_horizon).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt", map_location=device))
 
     model.eval()
@@ -32,19 +65,18 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     # model if that file is ever regenerated)
     scaler = joblib.load(f"saved_models/scaler_{region_id.lower()}_v2.pkl")
 
-    eval_hours = 168
-    forecast_hours = 24
+    eval_hours = lstm_base_data.lookback_steps
+    forecast_hours = lstm_base_data.forecast_horizon
 
     baseline_predictions = []
     lstm_predictions = []
 
     historical_df = raw_grid_data.iloc[-(eval_hours+forecast_hours):-forecast_hours]
-    ground_truth_df = raw_grid_data.iloc[-forecast_hours:]
 
     baseline_forecast = baseline_model.predict(historical_df)
     baseline_predictions = baseline_forecast[fuel_name].iloc[0:24].values
 
-    live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).bfill().ffill().values
+    live_raw_matrix = historical_df.reindex(columns=feature_cols, fill_value=0).ffill().bfill().values
     live_scaled_matrix = scaler.transform(live_raw_matrix)
 
     torch_input = torch.tensor(live_scaled_matrix, dtype=torch.float32).unsqueeze(0).to(device)
@@ -62,7 +94,6 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     plot_lstm = pd.Series(lstm_predictions, index=eval_index)
     plot_base = pd.Series(baseline_predictions, index=eval_index)
 
-    # 4. Generate the full-length multi-line chart
     plt.figure(figsize=[14, 6])
     plt.plot(eval_index, actuals.values, label="True Actual Generation", color="black", linewidth=2)
     plt.plot(eval_index, plot_base.values, label="Diurnal Mean Baseline", color="orange", linestyle="--",
@@ -87,7 +118,6 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     base_mae = mean_absolute_error(actuals, plot_base)
     net_improvement = ((base_mae - lstm_mae) / base_mae) * 100
 
-    # Return metrics as a clean dictionary for multi-run tracking
     return {
         "region_id": region_id,
         "fuel_name": fuel_name,
@@ -99,7 +129,8 @@ def evaluate_model_performance(region_id = "PJM", fuel_name = "Solar", days_back
     }
 
 if __name__ == "__main__":
-    print("Testing model on historical data!!!")
+    logging.basicConfig(level = logging.INFO)
+    logger.info("Testing model on historical data!!!")
 
     summer_test_date = pd.Timestamp("2026-07-28")
     winter_test_date = pd.Timestamp("2026-01-15 14:00:00")
@@ -108,10 +139,10 @@ if __name__ == "__main__":
 
     results = evaluate_model_performance(region_id = "PJM", fuel_name = "Natural Gas", days_back=15, custom_end_date=winter_test_date_two)
 
-    print("\n--- QUICK RESULTS SUMMARY ---")
-    print(f"Target Fuel Source: {results['fuel_name']}")
-    print(f"Evaluation End Date: {results['end_date']}")
-    print(f"LSTM Average Deviation (MAE): {results['lstm_mae']:.2f} MW")
-    print(f"Baseline Average Deviation (MAE): {results['base_mae']:.2f} MW")
-    print(f"Total Neural Network Advantage: {results['improvement']:.1f}% lower error")
+    logger.info("\n--- QUICK RESULTS SUMMARY ---")
+    logger.info(f"Target Fuel Source: {results['fuel_name']}")
+    logger.info(f"Evaluation End Date: {results['end_date']}")
+    logger.info(f"LSTM Average Deviation (MAE): {results['lstm_mae']:.2f} MW")
+    logger.info(f"Baseline Average Deviation (MAE): {results['base_mae']:.2f} MW")
+    logger.info(f"Total Neural Network Advantage: {results['improvement']:.1f}% lower error")
 

@@ -3,6 +3,9 @@ import torch
 import pandas as pd
 import numpy as np
 import joblib
+from src.regions import REGIONS
+from src.model_config import HIDDEN_SIZE, NUM_LAYERS
+
 
 from sklearn.metrics import (
     mean_absolute_error,
@@ -14,21 +17,42 @@ from src.preprocessing.data_loader import GridDataLoader
 from src.models.GridPulseLSTM import GridPulseLSTM
 from src.models.baseline import DiurnalRollingMeanBaseline
 from torch.utils.data import DataLoader, Subset
+import logging
 
+logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 32
 
 def evaluate_models(region_id = "PJM"):
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    """
+    Compare the errors of the baseline and LSTM models
+    
+    Args:
+        region_id(string): EIA region ID 
+
+    Returns:
+        None. Saves a CSV to the evaluation_metrics directory
+    Raises:
+        FileNotFoundError: If the models weights or dataset is missing
+    """
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
     dataset = GridDataLoader(f"grid_data/raw/grid_history_{region_id.lower()}_v4.csv")
 
-    # Ensures the same breakdown of the dataset, now focusion on validation
+    # Must match train.py's split exactly, so these indices are the same
+    # held-out hours the model never trained on
     train_size = int(len(dataset) * 0.85)
     validation_indices = list(range(train_size, len(dataset)))
     validation_subset = Subset(dataset, validation_indices)
     validation_loader = DataLoader(validation_subset, batch_size=BATCH_SIZE, shuffle=False)
 
-    model = GridPulseLSTM(input_size=9, hidden_size=64).to(device)
+    model = GridPulseLSTM(input_size=len(dataset.feature_cols),  hidden_size=HIDDEN_SIZE, num_layers= NUM_LAYERS).to(device)
     model.load_state_dict(torch.load(f"saved_models/lstm_grid_pulse_24h_{region_id.lower()}_v2.pt",
                                      map_location = device))
     model.eval()
@@ -78,9 +102,9 @@ def evaluate_models(region_id = "PJM"):
 
     baseline_predictions = np.vstack(baseline_forecasts)
 
-    print("LSTM predictions:", predictions.shape)
-    print("Baseline predictions:", baseline_predictions.shape)
-    print("Targets:", targets.shape)
+    logger.info(f"LSTM predictions: {predictions.shape}")
+    logger.info(f"Baseline predictions: {baseline_predictions.shape}")
+    logger.info(f"Targets: {targets.shape}")
 
     fuels = []
     baseline_maes = []
@@ -91,7 +115,6 @@ def evaluate_models(region_id = "PJM"):
     lstm_rmses = []
     lstm_r2s = []
 
-    # Calculates various statistics
     for i, fuel in enumerate(dataset.feature_cols):
         lstm_mae = mean_absolute_error(
             targets[:, i],
@@ -146,9 +169,9 @@ def evaluate_models(region_id = "PJM"):
         "Baseline R2": baseline_r2s,
         "LSTM R2": lstm_r2s
     })
-    print(results)
-    print("\nAverage Performance")
-    print(results.mean(numeric_only=True))
+    logger.info(results)
+    logger.info("\nAverage Performance")
+    logger.info(results.mean(numeric_only=True))
 
     results["MAE Improvement %"] = np.where(
         results["Baseline MAE"] != 0,
@@ -173,10 +196,11 @@ def evaluate_models(region_id = "PJM"):
     )
 
 if __name__ == "__main__":
-    regions = ["CISO", "SWPP", "ERCO", "MISO", "ISNE", "NYIS", "PJM"]
+    logging.basicConfig(level=logging.INFO)
+    regions = REGIONS
     for region in regions:
         try:
             evaluate_models(region)
         except Exception as error:
-            print(f"Evaluation failed for {region}: {error}")
+            logger.exception(f"Evaluation failed for {region}: {error}")
 

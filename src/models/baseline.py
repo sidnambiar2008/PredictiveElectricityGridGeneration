@@ -1,6 +1,12 @@
 import pandas as pd
 
 class DiurnalRollingMeanBaseline:
+    """
+    A class for the Baseline model to compare with the LSTM
+
+    Attributes:
+        window_days (int): How many days back to use for the mean
+    """
     def __init__(self, window_days: int = 7):
         self.window_days = window_days
 

@@ -36,6 +36,9 @@ keywords = [
     "multivariate-forecasting", "energy-analytics", "eia-930"
 ]
 
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
 [tool.setuptools]
-packages = ["src", "src.ingestion", "src.models", "src.training", "src.evaluation", "src.preprocessing", "src.inference"]
+packages = ["src", "src.ingestion", "src.models", "src.training", "src.evaluation", "src.preprocessing", "src.inference", "src.visualization"]
 

@@ -2,26 +2,25 @@ import os
 import requests
 import pandas as pd
 import time
+import logging
 
-def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp = None):
+logger = logging.getLogger(__name__)
+
+def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: pd.Timestamp | None = None):
     """
-       Fetches the latest data for each fuel in the electricity grid
-       to ensure the model has 7 days of historical data and 7 days to evaluate
-       the predictions
-
-       This function takes region_id and number of days back. Setting this allows for
-       flexibility with the historical timeframe and location
+       Fetch latest grid fuel data for historical lookback and evaluation
 
        Args:
            region_id (string): The region code that is current being fetched
            days_back (int): The number of days back to allow
+           custom_end_date(pd.Timestamp): End date of the historical data
 
        Returns:
-           dataframe: Historical dat
+           dataframe: Historical data
 
        Raises:
            ValueError: If no data is fetched, indicating a wrong path.
-           RuntimeError: If the fetch is unsuccessful, indicating a request error.
+           Exception: If the fetch is unsuccessful, indicating a request error.
        """
 
     api_key = os.getenv("EIA_API_KEY")
@@ -38,7 +37,8 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
     else:
         end_date= pd.Timestamp.now()
 
-    start_date: pd.Timestamp = pd.Timestamp(end_date - pd.Timedelta(days=days_back))
+    # noinspection PyTypeChecker
+    start_date: pd.Timestamp = end_date - pd.Timedelta(days=days_back)
 
     # Format the timestamps to match the EIA API expectations (YYYY-MM-DDTHH)
     start_str = start_date.strftime("%Y-%m-%dT%H")
@@ -59,20 +59,27 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
     max_retries = 3
     retry_delay = 5  # Seconds to wait
 
-    print(f"Connecting to EIA API .. Fetching past {days_back} days for region: {region_id}")
+    logger.info(f"Connecting to EIA API .. Fetching past {days_back} days for region: {region_id}")
 
+    response = None
     for attempt in range(max_retries):
-        response = requests.get(url, params= params)
+        try:
+            response = requests.get(url, params= params)
+        except requests.exceptions.RequestException as network_error:
+            if attempt < max_retries - 1:
+                logger.warning(f" Error contacting EIA API: {network_error}. Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+                continue
+            else:
+                raise Exception(f"Failed to connect to EIA API after {max_retries} attempts: {network_error}")
 
-        if (response.status_code == 200):
+        if response.status_code == 200:
             break
-
         elif attempt < max_retries - 1:
-            print(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+            logger.warning(f" EIA Server timeout (Status: {response.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
             time.sleep(retry_delay)
         else:
             raise Exception(f"Failed to connect to EIA API after {max_retries} attempts. Last status code: {response.status_code}")
-
 
     raw_json = response.json()
 
@@ -92,7 +99,7 @@ def fetch_latest_eia_data(region_id = "CISO", days_back = 14, custom_end_date: p
         index="period",
         columns="type-name",
         aggfunc="last"
-    )
+    ).fillna(0)
 
     clean_matrix = clean_matrix.sort_index().astype(float)
 

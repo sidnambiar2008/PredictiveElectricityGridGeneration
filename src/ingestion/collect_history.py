@@ -1,145 +1,190 @@
 import os
 import pandas as pd
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from src.regions import REGIONS
+import logging
+import time
 
 
 EXPECTED_COLS = ["Coal", "Geothermal", "Hydro", "Natural Gas", "Nuclear", "Petroleum", "Wind", "Solar", "Other"]
+logger = logging.getLogger(__name__)
 
+def fetch_historical_slice(start_date: str, end_date: str, region_id: str = "CISO"):
+    """
+    Fetch a specific region of the EIA data to add to the region's historical csv
 
-def fetch_historical_slice(start_date, end_date, region_id: str = "CISO"):
-        api_key = os.getenv("EIA_API_KEY")
+    Args:
+        start_date (string): Start date of the historical data, formatted as YYYY-MM-DDTHH
+        end_date (string): End date of the historical data formatted as YYYY-MM-DDTHH
+        region_id (string): EIA region code
 
-        if not api_key:
-            raise ValueError("Missing EIA_API_KEY environment variable. Please export it in your terminal.")
+    Returns:
+        dataframe: Slice of the EIA data
+    """
 
-        print(f"Connecting to the EIA API for {region_id}")
+    api_key = os.getenv("EIA_API_KEY")
 
-        BASE_URL = "https://api.eia.gov"
+    if not api_key:
+        raise ValueError("Missing EIA_API_KEY environment variable. Please export it in your terminal.")
 
-        url = f"{BASE_URL}/v2/electricity/rto/fuel-type-data/data/"
-        params = {
-            "api_key": api_key,
-            "frequency": "hourly",
-            "start": start_date,
-            "end": end_date,
-            "data[0]": "value",
-            "facets[respondent][]": region_id,
-            "sort[0][column]": "period",
-            "sort[0][direction]": "asc",
-            "length": 5000,
-            "offset": 0
-        }
-        all_records = []
-        total_records = None
+    logger.info(f"Connecting to the EIA API for {region_id}")
 
-        while True:
-            request = requests.get(url, params=params)
-            if request.status_code != 200:
-                raise RuntimeError(
-                    f"EIA request failed for {region_id}: {request.status_code}"
-                )
+    BASE_URL = "https://api.eia.gov"
 
-            request_data = request.json()
+    url = f"{BASE_URL}/v2/electricity/rto/fuel-type-data/data/"
+    params = {
+        "api_key": api_key,
+        "frequency": "hourly",
+        "start": start_date,
+        "end": end_date,
+        "data[0]": "value",
+        "facets[respondent][]": region_id,
+        "sort[0][column]": "period",
+        "sort[0][direction]": "asc",
+        "length": 5000,
+        "offset": 0
+    }
 
-            data_records = request_data.get("response", {}).get("data", [])
-            total_records = int(request_data.get("response", {}).get("total", 0))
+    max_retries = 3
+    retry_delay = 5  # Seconds to wait
 
-            all_records.extend(data_records)
+    all_records = []
+    total_records = None
 
-            if not data_records:
-                print(f"No data available for this balancing authority, {region_id}")
+    request = None
+    while True:
+        for attempt in range(max_retries):
+            try:
+                request = requests.get(url, params=params)
+            except requests.exceptions.RequestException as network_error:
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Network error fetching {region_id}: {network_error}. Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    raise Exception(f"Failed to connect to EIA API after {max_retries} attempts: {network_error}")
+
+            if request.status_code == 200:
                 break
+            elif attempt < max_retries - 1:
+                logger.warning(f" EIA Server timeout (Status: {request.status_code}). Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+            else:
+                raise RuntimeError(f"EIA request failed for {region_id}: {request.status_code}")
 
-            params["offset"] += params["length"]
-            if params["offset"] >= total_records:
-                break
+        request_data = request.json()
 
-        df = pd.DataFrame(all_records)
+        data_records = request_data.get("response", {}).get("data", [])
+        total_records = int(request_data.get("response", {}).get("total", 0))
 
-        if df.empty:
-            raise ValueError(f"No data returned for {region_id}")
+        all_records.extend(data_records)
 
-        df["period"] = pd.to_datetime(df["period"])
+        if not data_records:
+            logger.warning(f"No data available for this balancing authority, {region_id}")
+            break
 
-        df = df.pivot_table(index = "period", columns = "type-name", values = "value", aggfunc = "first")
+        params["offset"] += params["length"]
+        if params["offset"] >= total_records:
+            break
 
-        # The EIA API returns "value" as a string, so pivoted columns come out as
-        # object dtype rather than numeric. That was harmless before (nothing did
-        # arithmetic on them in memory — writing to CSV and reading it back with
-        # pd.read_csv silently re-inferred the correct numeric dtype), but the
-        # Geothermal/Other merge below does real arithmetic, so it needs to happen
-        # on actual floats.
-        df = df.astype(float)
+    df = pd.DataFrame(all_records)
 
-        print("\nMissing values before filling:")
-        print(df.isna().sum()[df.isna().sum() > 0])
+    if df.empty:
+        raise ValueError(f"No data returned for {region_id}")
 
-        for col in EXPECTED_COLS:
-            if col not in df.columns:
-                df[col] = 0
+    df["period"] = pd.to_datetime(df["period"])
 
-        df = df[EXPECTED_COLS]
-        df = df.fillna(0)
+    df = df.pivot_table(index = "period", columns = "type-name", values = "value", aggfunc = "first")
 
-        # EIA started reporting this region's geothermal generation as its own
-        # category partway through the collection window (it was previously
-        # folded into "Other"). Fold it back in so the feature is consistent
-        # across the whole history instead of jumping from a constant zero to
-        # a real value partway through. This must run after fillna(0): pivot_table
-        # leaves timestamps with no Geothermal record at all as NaN (not 0), and
-        # NaN + real_value = NaN, which would silently wipe out genuine Other
-        # data for every row before Geothermal existed as a reported category.
-        df["Other"] = df["Other"] + df["Geothermal"]
-        df["Geothermal"] = 0.0
+    # The EIA API returns "value" as a string, so pivoted columns come out as
+    # object dtype rather than numeric. That was harmless before (nothing did
+    # arithmetic on them in memory — writing to CSV and reading it back with
+    # pd.read_csv silently re-inferred the correct numeric dtype), but the
+    # Geothermal/Other merge below does real arithmetic, so it needs to happen
+    # on actual floats.
+    df = df.astype(float)
 
-        print("\nFinal missing values:")
-        print(df[EXPECTED_COLS].isna().sum())
+    logger.info("\nMissing values before filling:")
+    logger.info(df.isna().sum()[df.isna().sum() > 0])
 
-        df = df.sort_index()
-        return df
+    for col in EXPECTED_COLS:
+        if col not in df.columns:
+            df[col] = 0
+
+    df = df[EXPECTED_COLS]
+    df = df.fillna(0)
+
+    # EIA started reporting this region's geothermal generation as its own
+    # category partway through the collection window (it was previously
+    # folded into "Other"). Fold it back in so the feature is consistent
+    # across the whole history instead of jumping from a constant zero to
+    # a real value partway through. This must run after fillna(0): pivot_table
+    # leaves timestamps with no Geothermal record at all as NaN (not 0), and
+    # NaN + real_value = NaN, which would silently wipe out genuine Other
+    # data for every row before Geothermal existed as a reported category.
+    df["Other"] = df["Other"] + df["Geothermal"]
+    df["Geothermal"] = 0.0
+
+    logger.info("\nFinal missing values:")
+    logger.info(df[EXPECTED_COLS].isna().sum())
+
+    df = df.sort_index()
+    return df
 
 
 def main():
-    end_date_dt = datetime.utcnow()
+    """Runs the weekly incremental fetch for all 7 regions, appending to each region's history CSV"""
+
+    end_date_dt = datetime.now(timezone.utc)
     start_date_dt = end_date_dt - timedelta(days=7)
 
     os.makedirs("grid_data/raw", exist_ok=True)
-    regions = ["CISO", "PJM", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
+    regions = REGIONS
 
     for region in regions:
         save_path = f"grid_data/raw/grid_history_{region.lower()}_v4.csv"
 
-        clean_history_df = fetch_historical_slice(
-            start_date=start_date_dt.strftime("%Y-%m-%dT%H"),
-            end_date=end_date_dt.strftime("%Y-%m-%dT%H"),
-            region_id=region
-        )
+        try:
+            clean_history_df = fetch_historical_slice(
+                start_date=start_date_dt.strftime("%Y-%m-%dT%H"),
+                end_date=end_date_dt.strftime("%Y-%m-%dT%H"),
+                region_id=region
+            )
 
-        # Diagnostic Telemetry Checkpoints:
-        print("\n Checking dataframe dimensions before saving:")
-        print("Expected hourly rows:", 7 * 24)
-        print(f"   -> Dataframe Row Count: {len(clean_history_df)}")
-        print(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
+            logger.info("\n Checking dataframe dimensions before saving:")
+            logger.info(f"Expected hourly rows: {7 * 24}")
+            logger.info(f"   -> Dataframe Row Count: {len(clean_history_df)}")
+            logger.info(f"   -> Columns Extracted:   {list(clean_history_df.columns)}")
 
-        if clean_history_df.empty:
-            print(" WARNING: The dataframe is empty! The pivot key might be mismatched.")
-        else:
-            # 2. Explicitly name the index for your data loader tracking constraints
-            clean_history_df.index.name = "period"
-
-            if os.path.exists(save_path):
-                real_df = pd.read_csv(save_path, index_col="period", parse_dates=True)
-                updated_df = pd.concat([real_df, clean_history_df], axis=0)
+            if clean_history_df.empty:
+                logger.warning("The dataframe is empty! The pivot key might be mismatched.")
             else:
-                updated_df = clean_history_df
+                # Must match the index_col="period" read below, and what
+                # GridDataLoader expects when it reads this CSV back in.
+                clean_history_df.index.name = "period"
 
-            updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
-            updated_df = updated_df.sort_index()
+                if os.path.exists(save_path):
+                    real_df = pd.read_csv(save_path, index_col="period", parse_dates=True)
+                    updated_df = pd.concat([real_df, clean_history_df], axis=0)
+                else:
+                    updated_df = clean_history_df
 
-            # 3. Save the file cleanly
-            updated_df.to_csv(save_path, index=True, mode="w")
+                # Keep the newer of any overlapping hours instead of appending
+                # duplicates, since this week's slice always overlaps the tail
+                # of what's already on disk.
+                updated_df = updated_df[~updated_df.index.duplicated(keep="last")]
+                updated_df = updated_df.sort_index()
+
+                # mode="w" is safe here: updated_df already contains the full
+                # merged history (existing + new), not just this week's slice.
+                updated_df.to_csv(save_path, index=True, mode="w")
+        except Exception as error:
+            logger.exception(f"Error while fetching historical data for {region}: {error}")
+
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

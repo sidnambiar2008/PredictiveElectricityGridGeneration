@@ -9,6 +9,8 @@ ENV/
 .eggs/
 htmlcov/
 .pytest_cache/
+build/
+dist/
 
 # --- Data & Storage ---
 data/

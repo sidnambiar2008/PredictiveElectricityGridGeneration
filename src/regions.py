@@ -1,0 +1,1 @@
+REGIONS = ["CISO", "PJM", "SWPP", "ERCO", "MISO", "ISNE", "NYIS"]
