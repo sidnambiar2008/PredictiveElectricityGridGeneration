@@ -23,3 +23,44 @@ def test_geothermal_merge_does_not_wipe_others(monkeypatch):
     assert (result.loc["2024-01-01 00:00:00", "Other"] == 100)
     assert (result.loc["2024-01-01 01:00:00", "Geothermal"] == 0)
 
+def test_successful_response_does_not_retry(monkeypatch):
+    call_count = {"n": 0}
+
+    class FakeResponse:
+        status_code = 200
+        def json(self):
+            call_count["n"] += 1
+            return {"response": {"data": [
+                {"period": "2024-01-01T00", "type-name": "Other", "value": "100"},
+            ]}}
+
+    monkeypatch.setattr(requests, "get", lambda url, params: FakeResponse())
+    monkeypatch.setenv("EIA_API_KEY", "fake-key-for-test")
+
+    fetch_latest_eia_data(region_id="CISO", days_back=1)
+
+    assert call_count["n"] == 1
+
+def test_recovers_from_network_error(monkeypatch):
+    call_count = {"n": 0}
+
+    class FakeResponse:
+        status_code = 200
+        def json(self):
+            return {"response": {"data": [
+                {"period": "2024-01-01T00", "type-name": "Other", "value": "100"},
+            ]}}
+
+    def flaky_get(url, params=None):
+        call_count["n"] += 1
+        if call_count["n"] < 2:
+            raise requests.exceptions.ConnectionError("simulated network blip")
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "get", flaky_get)
+    monkeypatch.setenv("EIA_API_KEY", "fake-key-for-test")
+
+    result = fetch_latest_eia_data(region_id="CISO", days_back=1)
+
+    assert call_count["n"] == 2
+    assert result.loc["2024-01-01 00:00:00", "Other"] == 100.0
