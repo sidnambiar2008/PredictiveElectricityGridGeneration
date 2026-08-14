@@ -59,13 +59,13 @@ committed to the repo or baked into the Docker image.
 All scripts are run as modules from the repo root (this matters — they use
 repo-relative paths, so the working directory must be the repo root):
 
-| Script | Command | What it does | Reads | Writes |
-|---|---|---|---|---|
-| `src/ingestion/collect_history.py` | `python -m src.ingestion.collect_history` | Fetches the last 7 days of data for all 7 regions, appends/dedupes into each region's history CSV | EIA API | `grid_data/raw/*.csv` |
-| `src/training/train.py` | `python -m src.training.train` | Trains (retrains) the LSTM for all 7 regions from scratch | `grid_data/raw/*.csv` | `saved_models/*.pt`, `saved_models/*.pkl` |
-| `src/evaluation/evaluate_model.py` | `python -m src.evaluation.evaluate_model` | Scores each region's trained model against its held-out validation split | `grid_data/raw/*.csv`, `saved_models/*` | `evaluation_metrics/*.csv` |
-| `src/evaluation/run_back_test.py` | `python -m src.evaluation.run_back_test` | Ad hoc: backtest one region/fuel/date combination and plot it | EIA API, `saved_models/*` | `visuals/*.png` |
-| `src/inference/production_forecast.py` | `python -m src.inference.production_forecast` | Produces the actual 24-hour forecast + CO2/cleanliness stats for one region | EIA API, `saved_models/*` | `visuals/*.png`, stdout |
+| Script | Command | What it does | Reads | Writes                                                      |
+|---|---|---|---|-------------------------------------------------------------|
+| `src/ingestion/collect_history.py` | `python -m src.ingestion.collect_history` | Fetches the last 7 days of data for all 7 regions, appends/dedupes into each region's history CSV | EIA API | `grid_data/raw/*.csv`                                       |
+| `src/training/train.py` | `python -m src.training.train` | Trains (retrains) the LSTM for all 7 regions from scratch | `grid_data/raw/*.csv` | `saved_models/*.pt`, `saved_models/*.pkl`                   |
+| `src/evaluation/evaluate_model.py` | `python -m src.evaluation.evaluate_model` | Scores each region's trained model against its held-out validation split | `grid_data/raw/*.csv`, `saved_models/*` | `evaluation_metrics/*.csv`                                  |
+| `src/evaluation/run_back_test.py` | `python -m src.evaluation.run_back_test` | Ad hoc: backtest one region/fuel/date combination and plot it | EIA API, `saved_models/*` | `visuals/*.png`                                             |
+| `src/inference/production_forecast.py` | `python -m src.inference.production_forecast` | Produces the actual 24-hour forecast + CO2/cleanliness stats for one region | EIA API, `saved_models/*` | `visuals/*.png`; logs to stderr (via `logging`, not stdout) |
 
 Regions are the 7 EIA balancing authorities used throughout: `CISO, PJM,
 SWPP, ERCO, MISO, ISNE, NYIS`.
@@ -83,10 +83,13 @@ week of data and retrain the model every week.**
 - `run_back_test.py` → manual/on-demand only — this is an analysis tool, not
   something that should be scheduled
 - `production_forecast.py` → currently a script that forecasts one
-  hardcoded region (`PJM`) per invocation and prints/plots the result. To
+  hardcoded region (`PJM`) per invocation via its '__main__'. To
   actually serve forecasts on demand (the Flask/React part of the roadmap),
-  this needs to be called as a function — `predict_24_hours_hours_ahead(region_id)`
-  — per request, rather than relied on as a script.
+- call `predict_24_hours_hours_ahead(region_id)` directly per request instead
+  of relying on the script. It returns a dict (`region_id`, `current`
+  cleanliness/CO2 snapshot, `summary` day-ahead aggregates, `forecast_df`,
+  `baseline_df`) in addition to its existing logging/plotting side effects —
+  a Flask route can serve that dict as JSON directly.
 
 ## 5. Known limitations
 

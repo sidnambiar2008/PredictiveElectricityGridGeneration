@@ -27,11 +27,11 @@ def train_model(region_str):
     Returns:
         None. Saves model weights and scaler to the saved_models directory
     Side Effects:
-        Prints Hardware detected
-        Prints Epoch Number
-        Prints Mean Training Loss
-        Prints Validation Loss
-        Prints Scaler/Model Save Path
+        Logs Hardware detected
+        Logs Epoch Number
+        Logs Mean Training Loss
+        Logs Validation Loss
+        Logs Scaler/Model Save Path
     """
 
     if torch.cuda.is_available():

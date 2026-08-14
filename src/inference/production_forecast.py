@@ -18,8 +18,22 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
 
     Args:
         region_id (string): The EIA region id:
+
+    Returns:
+        dict: Forecast and CO2/cleanliness statistics for the region.
+            - region_id (str): EIA region ID.
+            - current (dict): Right-now snapshot — cleanliness_pct,
+              clean_generation_mw, total_generation_mw, co2_tons_per_hr.
+            - summary (dict): Day-ahead aggregates — cleanest_hour,
+              dirtiest_hour, avg_co2_intensity_lbs_per_mwh,
+              total_co2_tons_tomorrow.
+            - forecast_df (pd.DataFrame): 24-hour LSTM forecast, one column
+              per fuel type.
+            - baseline_df (pd.DataFrame): 24-hour diurnal-mean baseline
+              forecast, same columns as forecast_df.
+
     Side Effects:
-        Print Clean Energy Statistics
+        Logs Clean Energy Statistics
         Plots Energy Expected Tomorrow
     """
 
@@ -136,6 +150,24 @@ def predict_24_hours_hours_ahead(region_id = "PJM"):
 
     plot_fuel_forecast(actual_df=historical_df, lstm_df=lstm_df, baseline_df=forecast_matrix, fuel_name="Wind",
                        region_id = region_id)
+
+    return {
+        "region_id": region_id,
+        "current": {
+            "cleanliness_pct": cleanliness_now,
+            "clean_generation_mw": clean_now,
+            "total_generation_mw": total_now,
+            "co2_tons_per_hr": co2_now,
+        },
+        "summary": {
+            "cleanest_hour": clean_grid_percentage.idxmax(),
+            "dirtiest_hour": clean_grid_percentage.idxmin(),
+            "avg_co2_intensity_lbs_per_mwh": grid_intensity_hourly.mean(),
+            "total_co2_tons_tomorrow": total_co2_tomorrow,
+        },
+        "forecast_df": lstm_df,
+        "baseline_df": forecast_matrix,
+    }
 
 
 if __name__ == "__main__":
